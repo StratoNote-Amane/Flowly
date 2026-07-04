@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,minimum-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flowly">
+<meta name="theme-color" content="#080d14">
+<link rel="apple-touch-icon" id="flowly-icon" href="">
+<script id="flowly-icon-gen">(function(){
+function drawIcon(canvas){
+  var S=canvas.width,ctx=canvas.getContext('2d'),r=S*0.22;
+  ctx.fillStyle='#0d1825';
+  ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);ctx.closePath();ctx.fill();
+  var bg=ctx.createRadialGradient(S*0.2,S*0.15,0,S*0.5,S*0.5,S*0.8);
+  bg.addColorStop(0,'rgba(118,192,234,0.14)');bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(S-r,0);ctx.arcTo(S,0,S,r,r);ctx.lineTo(S,S-r);ctx.arcTo(S,S,S-r,S,r);ctx.lineTo(r,S);ctx.arcTo(0,S,0,S-r,r);ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);ctx.closePath();ctx.fill();
+  var pad=S*0.18,mid=S*0.5,amp=S*0.16;
+  ctx.save();
+  ctx.shadowColor='#76c0ea';ctx.shadowBlur=S*0.07;
+  ctx.strokeStyle='rgba(118,192,234,0.3)';ctx.lineWidth=S*0.06;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(pad,mid+amp*0.3);ctx.bezierCurveTo(S*0.3,mid+amp,S*0.4,mid-amp,S*0.5,mid);ctx.bezierCurveTo(S*0.6,mid+amp,S*0.7,mid-amp,S-pad,mid-amp*0.3);ctx.stroke();
+  ctx.shadowBlur=S*0.04;ctx.strokeStyle='#76c0ea';ctx.lineWidth=S*0.04;
+  ctx.beginPath();ctx.moveTo(pad,mid+amp*0.3);ctx.bezierCurveTo(S*0.3,mid+amp,S*0.4,mid-amp,S*0.5,mid);ctx.bezierCurveTo(S*0.6,mid+amp,S*0.7,mid-amp,S-pad,mid-amp*0.3);ctx.stroke();
+  ctx.shadowBlur=0;ctx.fillStyle='#76c0ea';ctx.beginPath();ctx.arc(pad,mid+amp*0.3,S*0.042,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(118,192,234,0.5)';ctx.beginPath();ctx.arc(S-pad,mid-amp*0.3,S*0.028,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+var c=document.createElement('canvas');c.width=180;c.height=180;drawIcon(c);
+var png=c.toDataURL('image/png');
+document.getElementById('flowly-icon').href=png;
+['57','72','76','114','120','144','152','180'].forEach(function(sz){var l=document.createElement('link');l.rel='apple-touch-icon';l.setAttribute('sizes',sz+'x'+sz);l.href=png;document.head.appendChild(l);});
+})();</script>
+<title>Flowly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:         #080d14;
+  --bg2:        #0d1520;
+  --surface:    rgba(15,22,34,0.94);
+  --surface2:   rgba(22,32,48,0.90);
+  --border:     rgba(255,255,255,0.07);
+  --border2:    rgba(255,255,255,0.13);
+  --text:       #eef2f8;
+  --text2:      #8fa3be;
+  --text3:      #4d6280;
+  --accent:     #76c0ea;
+  --accent-dim: rgba(118,192,234,0.13);
+  --accent-glow:rgba(118,192,234,0.28);
+  --warn:       #ffb347;
+  --warn-dim:   rgba(255,179,71,0.12);
+  --danger:     #ff5c6e;
+  --danger-dim: rgba(255,92,110,0.12);
+  --safe-top:   env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --r:          12px;
+  --r-lg:       18px;
+  --sh:         0 8px 32px rgba(0,0,0,0.55);
+  --sidebar-w:  220px;
+  --header-h:   54px;
+}
+
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Shippori Mincho B1','Shippori Mincho','Hiragino Mincho ProN','YuMincho','游明朝体','HG明朝E',serif;
+  background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;
+}
+
+/* ── BACKGROUND LAYERS ───────────────────────────── */
+#bg-static{
+  position:fixed;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 15% 10%,rgba(118,192,234,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 90%,rgba(118,192,234,0.04) 0%,transparent 50%),
+    var(--bg);
+}
+/* bg-image injected by JS sits above bg-static but below #layout */
+
+/* ── LAYOUT ──────────────────────────────────────── */
+#layout{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+}
+
+/* ── MOBILE HEADER (hidden on desktop) ──────────── */
+#mobile-header{
+  display:none;
+  height:calc(var(--header-h) + var(--safe-top));
+  padding-top:var(--safe-top);
+  background:rgba(8,13,20,0.92);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  align-items:center;justify-content:space-between;
+  padding-left:12px;padding-right:12px;
+  flex-shrink:0;
+  position:relative;
+  z-index:60;
+}
+.mobile-header-logo{
+  display:flex;align-items:center;gap:9px;
+  font-size:17px;font-weight:700;color:var(--accent);letter-spacing:0.04em;
+}
+.mobile-header-logo svg{width:28px;height:28px;flex-shrink:0}
+.menu-btn{
+  width:40px;height:40px;border-radius:var(--r);
+  background:none;border:none;color:var(--text2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 0.15s,color 0.15s;
+}
+.menu-btn:active{background:var(--surface2);color:var(--accent)}
+.add-btn-mobile{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--accent);border:none;color:#080d14;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px var(--accent-glow);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 0.15s;flex-shrink:0;
+}
+.add-btn-mobile:active{transform:scale(0.9)}
+.add-btn-mobile svg{width:18px;height:18px}
+
+/* ── SIDEBAR OVERLAY ─────────────────────────────── */
+#sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.52);z-index:90;
+  -webkit-tap-highlight-color:transparent;
+}
+#sidebar-overlay.open{display:block}
+
+/* ── DESKTOP BODY (sidebar + content) ───────────── */
+#body-row{
+  flex:1;display:flex;overflow:hidden;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────── */
+#sidebar{
+  width:var(--sidebar-w);
+  height:100%;
+  background:rgba(8,12,20,0.97);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.sidebar-logo{
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  font-size:18px;font-weight:700;color:var(--accent);letter-spacing:0.05em;
+  flex-shrink:0;
+}
+.sidebar-logo svg{width:34px;height:34px;flex-shrink:0}
+.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 12px;border-radius:var(--r);
+  cursor:pointer;color:var(--text3);
+  background:none;border:none;width:100%;text-align:left;
+  font-size:14px;font-weight:500;letter-spacing:0.02em;
+  font-family:inherit;min-height:44px;
+  transition:color 0.15s,background 0.15s;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--accent);background:var(--accent-dim)}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;background:var(--accent);
+  border-radius:0 3px 3px 0;box-shadow:0 0 8px var(--accent-glow);
+}
+.nav-item .ni-icon{width:19px;height:19px;flex-shrink:0;opacity:0.75}
+.nav-item.active .ni-icon{opacity:1}
+.sidebar-footer{
+  padding:10px 8px calc(12px + var(--safe-bottom));
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.sidebar-add{
+  display:flex;align-items:center;gap:11px;
+  width:100%;padding:11px 12px;border-radius:var(--r);
+  background:var(--accent);border:none;cursor:pointer;
+  color:#080d14;font-size:14px;font-weight:700;font-family:inherit;
+  letter-spacing:0.02em;box-shadow:0 0 16px var(--accent-glow);
+  transition:opacity 0.15s,transform 0.1s;
+  -webkit-tap-highlight-color:transparent;
+}
+.sidebar-add:active{opacity:0.85;transform:scale(0.98)}
+.sidebar-add svg{width:18px;height:18px;flex-shrink:0}
+
+/* ── MAIN CONTENT ────────────────────────────────── */
+#main-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  min-width:0;
+}
+.page-wrap{
+  max-width:600px;margin:0 auto;
+  padding:26px 16px calc(40px + var(--safe-bottom));
+}
+.page-head{margin-bottom:22px}
+.page-head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.page-title-main{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.02em;line-height:1.2}
+
+/* ── GLASS CARD ──────────────────────────────────── */
+.card{
+  background:var(--surface);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;margin-bottom:12px;box-shadow:var(--sh);
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:8px}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3)}
+
+/* has-bg: カードをより透明に */
+body.has-bg .card{background:rgba(8,14,24,0.80);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+body.has-bg #sidebar{background:rgba(5,9,16,0.95)}
+body.has-bg #mobile-header{background:rgba(5,9,16,0.92)}
+body.has-bg .modal{background:rgba(8,14,24,0.97)}
+
+/* ── FLOW RING ───────────────────────────────────── */
+.flow-ring-wrap{display:flex;align-items:center;justify-content:center;padding:16px 0;gap:28px}
+.flow-ring-svg{position:relative;width:110px;height:110px;flex-shrink:0}
+.flow-ring-svg svg{transform:rotate(-90deg)}
+.flow-ring-track{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:8}
+.flow-ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1),stroke 0.5s}
+.flow-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.flow-ring-pct{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.03em;line-height:1}
+.flow-ring-sub{font-size:10px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.flow-ring-stats{display:flex;flex-direction:column;gap:14px}
+.flow-stat-val{font-size:20px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.02em}
+.flow-stat-label{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}
+
+/* ── TODAY TASKS ─────────────────────────────────── */
+.today-task{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);transition:opacity 0.2s}
+.today-task:last-child{border-bottom:none}
+.today-task.done{opacity:0.42}
+.today-task.done .t-title{text-decoration:line-through}
+
+/* ── CHECKBOX ────────────────────────────────────── */
+.task-check{
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--border2);background:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+  transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.task-check:active{transform:scale(0.9)}
+.task-check:hover{border-color:var(--accent)}
+.task-check.checked{background:var(--accent);border-color:var(--accent);color:#080d14;box-shadow:0 0 10px var(--accent-glow)}
+.task-check.weekly-icon{color:var(--text3)}
+.task-check.weekly-icon.checked{color:#080d14}
+.task-check svg{width:12px;height:12px}
+
+/* ── TASK BODY ───────────────────────────────────── */
+.t-body{flex:1;min-width:0}
+.t-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4}
+.t-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+/* ── BADGES ──────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.03em;border:1px solid transparent;white-space:nowrap}
+.badge-overdue{background:var(--danger-dim);color:var(--danger);border-color:rgba(255,92,110,0.25)}
+.badge-today-dl{background:var(--danger-dim);color:var(--danger);border-color:rgba(255,92,110,0.25)}
+.badge-urgent{background:var(--warn-dim);color:var(--warn);border-color:rgba(255,179,71,0.25)}
+.badge-weekly{background:var(--accent-dim);color:var(--accent);border-color:rgba(118,192,234,0.25)}
+.badge-unlock{background:rgba(100,160,255,0.1);color:#7eb8ff;border-color:rgba(100,160,255,0.2)}
+
+/* ── SKIP / EXTRA BUTTONS ────────────────────────── */
+.skip-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;transition:color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;margin-top:4px;font-family:inherit}
+.skip-btn.undo{color:var(--accent);border-color:rgba(118,192,234,0.3);background:var(--accent-dim)}
+
+/* ── ACHIEVEMENT BANNER ──────────────────────────── */
+.achievement-banner{display:flex;align-items:center;gap:14px;background:rgba(118,192,234,0.07);border:1px solid rgba(118,192,234,0.18);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.achievement-text-main{font-size:14px;font-weight:700;color:var(--accent)}
+.achievement-text-sub{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* ── DAY CONTROLS ────────────────────────────────── */
+.day-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.day-pill{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.02em;transition:color 0.15s,border-color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;font-family:inherit}
+.day-pill.holiday-tag{background:rgba(168,85,247,0.1);color:#c084fc;border-color:rgba(168,85,247,0.25)}
+.day-pill.ok-tag{background:var(--accent-dim);color:var(--accent);border-color:rgba(118,192,234,0.25)}
+.recompute-btn{width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color 0.15s,border-color 0.15s;-webkit-tap-highlight-color:transparent}
+.recompute-btn:active{color:var(--accent);border-color:var(--accent)}
+
+/* ── EMPTY STATE ─────────────────────────────────── */
+.empty-state{text-align:center;padding:44px 20px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--text3)}
+
+/* ── SUB TABS ────────────────────────────────────── */
+.sub-tabs{display:flex;gap:3px;margin-bottom:14px;background:var(--surface);padding:4px;border-radius:calc(var(--r) + 4px);border:1px solid var(--border)}
+.sub-tab{flex:1;padding:8px 6px;background:none;border:none;border-radius:var(--r);color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;font-family:inherit;letter-spacing:0.02em}
+.sub-tab.active{color:var(--accent);background:var(--accent-dim)}
+.tab-count{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#080d14;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;margin-left:3px;vertical-align:middle}
+
+/* ── TASK LIST ITEM ──────────────────────────────── */
+.task-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:8px;transition:border-color 0.15s}
+.task-item:hover{border-color:var(--border2)}
+.task-item.done{opacity:0.5}
+.task-item.done .t-title{text-decoration:line-through}
+.task-item-main{flex:1;min-width:0}
+.task-item-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.icon-btn{width:32px;height:32px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s,border-color 0.15s;-webkit-tap-highlight-color:transparent}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--surface2)}
+.icon-btn.danger:hover{color:var(--danger);border-color:rgba(255,92,110,0.3);background:var(--danger-dim)}
+.icon-btn svg{width:14px;height:14px}
+
+/* ── SIM WIDGET ──────────────────────────────────── */
+.sim-widget{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.sim-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3)}
+.sim-date{font-size:16px;font-weight:800;color:var(--accent);line-height:1}
+.sim-date.today{color:var(--accent)}
+.sim-date.none{font-size:12px;color:var(--text3)}
+
+/* ── SETTINGS ────────────────────────────────────── */
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden;margin-top:4px}
+.summary-cell{background:var(--surface2);padding:16px 12px;text-align:center}
+.summary-num{display:block;font-size:24px;font-weight:800;color:var(--text);line-height:1}
+.summary-lbl{display:block;font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
+.capacity-row{margin-bottom:14px}
+.capacity-row:last-of-type{margin-bottom:0}
+.capacity-row-label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em}
+.capacity-control{display:flex;align-items:center;gap:14px;margin-top:10px}
+.capacity-control input[type="range"]{flex:1}
+.cap-num{font-size:20px;font-weight:800;color:var(--accent);min-width:28px;text-align:right}
+.load-guide{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.load-guide-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:4px}
+.load-guide-row{display:flex;align-items:center;gap:8px}
+.load-guide-desc{font-size:11px;color:var(--text2)}
+.bg-preview{width:100%;height:100px;border-radius:var(--r);background-size:cover;background-position:center;margin:12px 0}
+.bg-preview.empty{background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;border:1px solid var(--border)}
+.bg-actions{display:flex;gap:8px;flex-wrap:wrap}
+.settings-actions{display:flex;flex-direction:column;gap:8px}
+.version-info{text-align:center;font-size:11px;color:var(--text3);margin-top:24px;letter-spacing:0.05em}
+
+/* ── FORMS ───────────────────────────────────────── */
+input[type="text"],input[type="date"],select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none;-webkit-appearance:none;letter-spacing:0.01em}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+input::placeholder{color:var(--text3)}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.6)}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--border2);border-radius:2px;outline:none;border:none;padding:0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--accent-glow);border:2px solid #080d14}
+input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #080d14}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px}
+.label-opt{font-size:10px;font-weight:500;color:var(--text3);text-transform:none;letter-spacing:0}
+.type-selector{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.type-btn{flex:1;padding:10px 8px;background:none;border:none;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;letter-spacing:0.02em}
+.type-btn.active{color:var(--accent);background:var(--accent-dim)}
+.weekday-selector{display:flex;gap:5px}
+.wd-btn{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:color 0.15s,background 0.15s,border-color 0.15s;-webkit-tap-highlight-color:transparent}
+.wd-btn.active{color:#080d14;background:var(--accent);border-color:var(--accent)}
+.load-slider-display{display:flex;align-items:center;gap:10px;margin-top:10px}
+.load-slider-hint{font-size:12px;color:var(--text3)}
+
+/* ── BUTTONS ─────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 18px;border-radius:var(--r);font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;letter-spacing:0.02em;min-height:44px;transition:opacity 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:0.8;transform:scale(0.98)}
+.btn-primary{background:var(--accent);color:#080d14;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(255,92,110,0.25)}
+.btn-full{width:100%}
+.btn-sm{padding:7px 14px;font-size:12px}
+
+/* ── MODAL ───────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.22s;backdrop-filter:blur(4px)}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal{background:var(--bg2);border-top:1px solid var(--border2);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + var(--safe-bottom));width:100%;max-width:540px;max-height:92vh;overflow-y:auto;transform:translateY(60px);transition:transform 0.28s cubic-bezier(0.32,0.72,0,1)}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px;letter-spacing:-0.01em}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions .btn{flex:1}
+
+/* ── TOAST ───────────────────────────────────────── */
+#toast{position:fixed;bottom:calc(20px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(14px);background:rgba(18,28,42,0.96);backdrop-filter:blur(12px);color:var(--text);padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none;z-index:300;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 0 1px var(--border)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── OFFLINE ─────────────────────────────────────── */
+#offline-badge{display:none;position:fixed;top:calc(var(--safe-top) + 12px);left:50%;transform:translateX(-50%);background:var(--warn);color:#080d14;font-size:11px;font-weight:800;padding:5px 14px;border-radius:20px;z-index:400;letter-spacing:0.04em}
+
+/* ── SCROLLBAR ───────────────────────────────────── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+/* ── RESPONSIVE: MOBILE ──────────────────────────── */
+@media(max-width:760px){
+  #mobile-header{display:flex}
+  #sidebar{
+    position:fixed;top:0;left:-100%;height:100%;
+    width:78vw;max-width:280px;
+    transition:left 0.26s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:4px 0 32px rgba(0,0,0,0.6);
+    padding-top:var(--safe-top);
+    z-index:100;
+  }
+  #sidebar.open{left:0}
+  .page-wrap{padding-top:18px}
+  .sidebar-logo{padding:16px 16px 14px}
+}
+</style>
+</head>
+<body>
+<div id="bg-static"></div>
+<div id="offline-badge">オフライン</div>
+<div id="toast"></div>
+
+<div id="layout">
+<!-- MOBILE HEADER -->
+<div id="mobile-header">
+  <button class="menu-btn" onclick="toggleSidebar()" aria-label="メニューを開く">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="mobile-header-logo">
+    <svg viewBox="0 0 34 34" fill="none">
+      <rect width="34" height="34" rx="9" fill="rgba(118,192,234,0.12)"/>
+      <path d="M6 22 Q10 12 17 17 Q24 22 28 10" stroke="#76c0ea" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <circle cx="6" cy="22" r="2.2" fill="#76c0ea"/>
+    </svg>
+    Flowly
+  </div>
+  <button class="add-btn-mobile" onclick="openAddTask()" aria-label="タスクを追加">
+    <svg viewBox="0 0 24 24" fill="none">
+      <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+</div>
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div id="body-row">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" role="navigation" aria-label="メインナビゲーション">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 34 34" fill="none">
+          <rect width="34" height="34" rx="9" fill="rgba(118,192,234,0.12)"/>
+          <path d="M6 22 Q10 12 17 17 Q24 22 28 10" stroke="#76c0ea" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <circle cx="6" cy="22" r="2.2" fill="#76c0ea"/>
+        </svg>
+        Flowly
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
+          <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          今日
+        </button>
+        <button class="nav-item" data-page="tasks" onclick="navigateTo('tasks')">
+          <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          タスク
+        </button>
+        <button class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+          <svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+          設定
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sidebar-add" onclick="openAddTask()">
+          <svg viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          タスクを追加
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div id="main-content" role="main" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- タスク追加・編集モーダル -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-task-title">タスクを追加</div>
+    <div class="form-group">
+      <label>タイトル</label>
+      <input type="text" id="input-task-title" placeholder="例：レポート提出" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="form-group">
+      <label>種類</label>
+      <div class="type-selector">
+        <button type="button" class="type-btn active" data-type="once" onclick="setTaskType('once')">一回のみ</button>
+        <button type="button" class="type-btn" data-type="weekly" onclick="setTaskType('weekly')">毎週繰り返す</button>
+      </div>
+    </div>
+    <div class="form-group" id="deadline-row">
+      <label>期限 <span class="label-opt">任意</span></label>
+      <input type="date" id="input-task-deadline">
+    </div>
+    <div class="form-group" id="unlock-row">
+      <label>解禁日 <span class="label-opt">任意</span></label>
+      <input type="date" id="input-task-unlock">
+    </div>
+    <div class="form-group" id="weekdays-row" style="display:none">
+      <label>繰り返す曜日</label>
+      <div class="weekday-selector">
+        <button type="button" class="wd-btn" data-dow="1" onclick="toggleWeekday(this)">月</button>
+        <button type="button" class="wd-btn" data-dow="2" onclick="toggleWeekday(this)">火</button>
+        <button type="button" class="wd-btn" data-dow="3" onclick="toggleWeekday(this)">水</button>
+        <button type="button" class="wd-btn" data-dow="4" onclick="toggleWeekday(this)">木</button>
+        <button type="button" class="wd-btn" data-dow="5" onclick="toggleWeekday(this)">金</button>
+        <button type="button" class="wd-btn" data-dow="6" onclick="toggleWeekday(this)">土</button>
+        <button type="button" class="wd-btn" data-dow="0" onclick="toggleWeekday(this)">日</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>負荷（作業量の目安）</label>
+      <input type="range" id="load-slider" min="0.5" max="5" step="0.5" value="3" oninput="updateLoadSlider(this.value)">
+      <div class="load-slider-display">
+        <span id="load-slider-badge" class="badge"></span>
+        <span id="load-slider-hint" class="load-slider-hint"></span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-task')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveTask()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 削除確認 -->
+<div class="modal-overlay" id="modal-delete-confirm">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:var(--danger)">タスクを削除</div>
+    <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px">このタスクを削除しますか？<br>この操作は取り消せません。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-delete-confirm')">キャンセル</button>
+      <button class="btn btn-danger" onclick="executeDeleteTask()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- リセット確認 -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:var(--danger)">データをリセット</div>
+    <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px">すべてのデータを削除します。<br>この操作は取り消せません。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">キャンセル</button>
+      <button class="btn btn-danger" onclick="executeReset()">リセットする</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+var CFG = {
+  APP_NAME:'Flowly', APP_VERSION:'2.0',
+  STORAGE_KEY:'altair_data',
+  LEGACY_KEYS:['altair_v2','altair_v1'],
+  WEEKDAY_NAMES:['日','月','火','水','木','金','土'],
+  DEFAULT_DAILY_CAPACITY:10,
+};
+
+// ─── COLOR / LABEL ───────────────────────────────────────────────────────────
+function loadColor(v){
+  var t=Math.max(0,Math.min(1,(v-0.5)/4.5));
+  if(t<0.25){var r=Math.round(58+(224-58)*(t/0.25)),g=Math.round(170+(144-170)*(t/0.25)),b=Math.round(114+(48-114)*(t/0.25));return'rgb('+r+','+g+','+b+')';}
+  else if(t<0.5){var tt=(t-0.25)/0.25,r=Math.round(224+(226-224)*tt),g=Math.round(144+(75-144)*tt),b=Math.round(48+(74-48)*tt);return'rgb('+r+','+g+','+b+')';}
+  else{var tt=(t-0.5)/0.5,r=Math.round(226+(168-226)*tt),g=Math.round(75+(85-75)*tt),b=Math.round(74+(247-74)*tt);return'rgb('+r+','+g+','+b+')';}
+}
+function loadLabel(v){return String(v%1===0?v:v.toFixed(1));}
+function normalizeText(v){return String(v||'').trim().normalize('NFKC').toLowerCase();}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+var S={};
+var STATE_DEFAULTS={tasks:[],todayPlan:null,extraDoneToday:null,learningHistory:{},
+  learningAnalytics:{bySubject:{},byWeekday:{},compressed:{}},adaptiveHistory:{recommendedCapacity:null,missStreak:0,hitStreak:0,lastCapacityUpdateDate:null,dailyCompletion:{}},sessionHistory:[],
+  settings:{capacityWeekday:10,capacityHoliday:6,holidays:[],bg:'',bgOpacity:65,todayOverride:null}};
+
+function loadState(){
+  try{
+    var raw=localStorage.getItem(CFG.STORAGE_KEY);
+    if(!raw){for(var ki=0;ki<CFG.LEGACY_KEYS.length;ki++){var leg=localStorage.getItem(CFG.LEGACY_KEYS[ki]);if(leg){raw=leg;try{localStorage.setItem(CFG.STORAGE_KEY,leg);localStorage.removeItem(CFG.LEGACY_KEYS[ki]);}catch(e){}break;}}}
+    S=raw?Object.assign({},STATE_DEFAULTS,JSON.parse(raw)):Object.assign({},STATE_DEFAULTS);
+  }catch(e){S=Object.assign({},STATE_DEFAULTS);}
+  if(!Array.isArray(S.tasks))S.tasks=[];
+  if(!S.learningHistory||typeof S.learningHistory!=='object'||Array.isArray(S.learningHistory))S.learningHistory={};
+  else S.learningHistory=Object.assign({},S.learningHistory);
+  _ensureAdaptiveDefaults();
+  var sv=S.settings||{};
+  S.settings=Object.assign({capacityWeekday:sv.dailyCapacity||CFG.DEFAULT_DAILY_CAPACITY,capacityHoliday:6,holidays:[],bg:'',bgOpacity:65,todayOverride:null},sv);
+  delete S.settings.dailyCapacity;
+  if(S.todayPlan&&!Array.isArray(S.todayPlan.entries))S.todayPlan=null;
+  var td=today();
+  if(!S.extraDoneToday||S.extraDoneToday.date!==td)S.extraDoneToday={date:td,taskIds:[],load:0};
+  _purgeDoneTasks();
+  updateRecommendedCapacityForNewDay(getTodayCapacity());
+}
+function saveState(){try{localStorage.setItem(CFG.STORAGE_KEY,JSON.stringify(S));}catch(e){showToast('保存失敗（容量不足の可能性があります）');}}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function generateId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function pad2(n){return String(n).padStart(2,'0');}
+function localDateStr(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function sanitize(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dateAddDays(ds,n){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localDateStr(d);}
+function dayOfWeek(ds){return new Date(ds+'T00:00:00').getDay();}
+function daysUntil(ds){var n=new Date();n.setHours(0,0,0,0);var dl=new Date(ds+'T00:00:00');return Math.round((dl-n)/86400000);}
+
+function isHoliday(ds){
+  if(S.settings&&S.settings.todayOverride&&S.settings.todayOverride.date===ds)return S.settings.todayOverride.isHoliday;
+  var dow=dayOfWeek(ds);if(dow===0||dow===6)return true;
+  return((S.settings&&S.settings.holidays)||[]).includes(ds);
+}
+function setTodayOverride(isHol){S.settings.todayOverride={date:today(),isHoliday:isHol};saveState();rebalanceWithKeep();navigateTo('home');}
+function getTodayCapacity(){return isHoliday(today())?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);}
+
+// ─── PURGE ───────────────────────────────────────────────────────────────────
+function _purgeDoneTasks(){
+  var td=today(),before=S.tasks.length;
+  S.tasks=S.tasks.filter(function(t){if(t.type==='weekly')return true;if(!t.done)return true;return t.doneDate&&t.doneDate>=td;});
+  if(S.tasks.length!==before)S.todayPlan=null;
+}
+
+// ─── WEEKLY ──────────────────────────────────────────────────────────────────
+function isWeeklyDoneOn(t,ds){return Array.isArray(t.doneHistory)&&t.doneHistory.includes(ds);}
+function isWeeklySkippedOn(t,ds){return Array.isArray(t.skipHistory)&&t.skipHistory.includes(ds);}
+function markWeeklyDoneToday(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='weekly')return;if(!Array.isArray(t.doneHistory))t.doneHistory=[];var d=today();if(!t.doneHistory.includes(d)){t.doneHistory.push(d);var type=inferLearningType(t.title);recordCompletionHistory(type,false);recordSession(t,{type:type,wasOverdue:false});}if(Array.isArray(t.skipHistory))t.skipHistory=t.skipHistory.filter(function(x){return x!==d;});saveState();}
+function unmarkWeeklyDoneToday(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||!Array.isArray(t.doneHistory))return;var d=today();t.doneHistory=t.doneHistory.filter(function(x){return x!==d;});saveState();}
+function skipWeeklyToday(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='weekly')return;if(!Array.isArray(t.skipHistory))t.skipHistory=[];var d=today();if(!t.skipHistory.includes(d)){t.skipHistory.push(d);recordWeekdaySkip(new Date(d+'T00:00:00').getDay());}if(Array.isArray(t.doneHistory))t.doneHistory=t.doneHistory.filter(function(x){return x!==d;});saveState();rebalanceSnapshot();navigateTo('home');}
+function unskipWeeklyToday(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||!Array.isArray(t.skipHistory))return;var d=today();t.skipHistory=t.skipHistory.filter(function(x){return x!==d;});saveState();rebalanceSnapshot();navigateTo('home');}
+
+// ─── EXTRA DONE ──────────────────────────────────────────────────────────────
+function markExtraDone(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t)return;var td=today();if(!S.extraDoneToday||S.extraDoneToday.date!==td)S.extraDoneToday={date:td,taskIds:[],load:0};if(S.extraDoneToday.taskIds.includes(id))return;S.extraDoneToday.taskIds.push(id);S.extraDoneToday.load=(S.extraDoneToday.load||0)+(t.load||1);saveState();rebalanceSnapshot();}
+function unmarkExtraDone(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||!S.extraDoneToday)return;var td=today();if(S.extraDoneToday.date!==td)return;if(!S.extraDoneToday.taskIds.includes(id))return;S.extraDoneToday.taskIds=S.extraDoneToday.taskIds.filter(function(x){return x!==id;});S.extraDoneToday.load=Math.max(0,(S.extraDoneToday.load||0)-(t.load||1));saveState();rebalanceSnapshot();}
+function toggleOnceDone(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='once')return;var becomingDone=!t.done;t.done=becomingDone;t.doneDate=becomingDone?today():null;if(becomingDone){var wasOverdue=t.deadline&&t.deadline<today();var type=inferLearningType(t.title);recordCompletionHistory(type,wasOverdue);recordSession(t,{type:type,wasOverdue:wasOverdue});}saveState();}
+
+// ─── SNAPSHOT ENGINE ─────────────────────────────────────────────────────────
+function _ensureSnapshot(td){if(S.todayPlan&&S.todayPlan.date===td&&Array.isArray(S.todayPlan.entries))return S.todayPlan;return _generateSnapshot(td);}
+function _generateSnapshot(td){
+  var cap=isHoliday(td)?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);
+  var entries=[],usedLoad=0,ids={};
+  function add(t,src,type){entries.push({id:t.id,load:t.load||1,src:src,type:type});usedLoad+=(t.load||1);ids[t.id]=true;}
+  _fillEntries(td,cap,entries,usedLoad,ids,add);
+  S.todayPlan={date:td,entries:entries};saveState();return S.todayPlan;
+}
+function rebalanceSnapshot(){rebalanceWithKeep();}
+function rebalanceWithKeep(){
+  var td=today(),cap=isHoliday(td)?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);
+  var kept=[],doneLoad=0,ids={};
+  if(S.todayPlan&&S.todayPlan.date===td&&Array.isArray(S.todayPlan.entries)){
+    S.todayPlan.entries.forEach(function(e){var t=S.tasks.find(function(x){return x.id===e.id;});if(!t)return;var isDone=e.type==='weekly'?isWeeklyDoneOn(t,td):t.done;if(isDone){kept.push(e);doneLoad+=(e.load||1);ids[e.id]=true;}});
+  }
+  var extraLoad=(S.extraDoneToday&&S.extraDoneToday.date===td)?(S.extraDoneToday.load||0):0;
+  _fillEntries(td,cap-doneLoad-extraLoad,kept,0,ids,function(t,src,type){kept.push({id:t.id,load:t.load||1,src:src,type:type});ids[t.id]=true;});
+  S.todayPlan={date:td,entries:kept};saveState();return S.todayPlan;
+}
+function _fillEntries(td,cap,entries,_ign,ids,add){
+  var dow=dayOfWeek(td),tmr=dateAddDays(td,1),iUsed=0,heavy=0;
+  entries.forEach(function(e){if((e.load||1)>=4)heavy++;});
+  function ac(t,src,type,ol){var el=ol!==undefined?ol:(t.load||1);var p=Object.assign({},t,{load:el});add(p,src,type);iUsed+=el;if(el>=4)heavy++;}
+  S.tasks.filter(function(t){return t.type==='weekly'&&Array.isArray(t.weekDays)&&t.weekDays.includes(dow)&&!ids[t.id]&&!isWeeklySkippedOn(t,td);}).forEach(function(t){ac(t,'weekly','weekly');});
+  var cands=S.tasks.filter(function(t){if(t.type==='weekly'||t.done||ids[t.id])return false;if(t.unlockDate&&t.unlockDate>td)return false;return true;});
+  cands.filter(function(t){return t.deadline&&t.deadline<td;}).sort(function(a,b){return a.deadline.localeCompare(b.deadline);}).forEach(function(t){var hl=Math.max(0.5,Math.round((t.load||1)*0.5*2)/2);ac(t,'overdue','once',hl);});
+  cands.filter(function(t){return t.deadline===td&&!ids[t.id];}).forEach(function(t){var hl=Math.max(0.5,Math.round((t.load||1)*0.5*2)/2);ac(t,'today_dl','once',hl);});
+  cands.filter(function(t){return t.deadline===tmr&&!ids[t.id];}).forEach(function(t){ac(t,'urgent','once');});
+  var rem=cap-iUsed;
+  cands.filter(function(t){return t.deadline&&t.deadline>tmr&&!ids[t.id];}).filter(function(t){var d=daysUntil(t.deadline);return d>=2&&d<=2;}).sort(function(a,b){return a.deadline.localeCompare(b.deadline);}).forEach(function(t){var l=t.load||1;if(rem>0&&l<=rem){if(l>=4&&heavy>=1)return;ac(t,'deadline','once');rem-=l;}});
+  var noDl=cands.filter(function(t){if(ids[t.id])return false;if(!t.deadline)return true;return daysUntil(t.deadline)>=3;}).sort(function(a,b){return(b.load||1)-(a.load||1);});
+  var changed=true;
+  while(changed&&rem>0){changed=false;for(var i=0;i<noDl.length;i++){if(ids[noDl[i].id])continue;var l=noDl[i].load||1;if(l>rem)continue;if(l>=4&&heavy>=1)continue;ac(noDl[i],'buffer','once');rem-=l;changed=true;break;}}
+}
+
+// ─── LEARNING EFFICIENCY ENGINE (vNext Phase1) ───────────────────────────────
+// 入力項目は増やさない。タイトルから内部的に学習タイプを推定するのみ。
+var LEARNING_TYPE_KEYWORDS={
+  LOGIC:['数学','数学Ⅰ','数学Ⅱ','数学Ⅲ','数学A','数学B','数学演習','物理','化学','関数','証明','計算'],
+  MEMORY:['英単語','単語','熟語','漢字','暗記','語句','用語','年号','公式暗記'],
+  CREATIVE:['作文','小論文','レポート','エッセイ','創作'],
+  READING:['読書','現代文','英文読解','長文','読解','古文','漢文'],
+  PRACTICE:['問題集','演習','過去問','模試','ドリル','復習']
+};
+function inferLearningType(title){
+  var n=normalizeText(title);
+  if(!n)return'PRACTICE';
+  var types=Object.keys(LEARNING_TYPE_KEYWORDS);
+  for(var i=0;i<types.length;i++){
+    var kws=LEARNING_TYPE_KEYWORDS[types[i]];
+    for(var j=0;j<kws.length;j++){if(n.indexOf(normalizeText(kws[j]))!==-1)return types[i];}
+  }
+  return'PRACTICE';
+}
+var LEARNING_TYPE_LABEL={LOGIC:'論理思考',MEMORY:'暗記',CREATIVE:'創作',READING:'読解',PRACTICE:'演習'};
+
+// 集中力モデル：時間帯ごとの内部係数（設定画面には出さない）
+function getFocusCoefficient(hour){
+  if(hour===undefined)hour=new Date().getHours();
+  if(hour>=5&&hour<11)return{val:1.0,label:'朝'};
+  if(hour>=11&&hour<17)return{val:0.85,label:'昼'};
+  if(hour>=17&&hour<21)return{val:0.9,label:'夕方'};
+  return{val:0.7,label:'夜'};
+}
+// LOGIC/CREATIVEは集中力の影響を受けやすく、MEMORY/PRACTICEは受けにくい
+var TYPE_FOCUS_SENSITIVITY={LOGIC:1.0,CREATIVE:0.9,READING:0.6,PRACTICE:0.4,MEMORY:0.2};
+
+// 疲労モデル：同一学習タイプの連続で係数が増加
+var FATIGUE_STEPS=[1.0,1.2,1.5,1.8];
+function fatigueMultiplier(streak){var i=Math.min(streak,FATIGUE_STEPS.length-1);return FATIGUE_STEPS[i];}
+
+// 切替コスト：直前と学習タイプが変わる場合の小さな負荷（疲労回避との比較で相殺されうる）
+function switchCost(prevType,nextType){if(!prevType||prevType===nextType)return 0;return 0.6;}
+
+function _deadlineScoreOf(t,td){
+  if(t._src==='overdue')return 100;
+  if(t._src==='today_dl')return 90;
+  if(t._src==='urgent')return 70;
+  if(t.deadline){var d=daysUntil(t.deadline);return Math.max(0,40-d*3);}
+  return 10;
+}
+
+// 履歴補正：予定負荷と実績（期限超過の有無）から内部補正係数を生成する。ユーザーへの表示は不要。
+// 既存保存形式は変更しない。S.learningHistory は新規プロパティとして追加のみ。
+function getHistoryCorrection(type){
+  var h=S.learningHistory&&S.learningHistory[type];
+  if(!h||!h.samples)return 1.0;
+  return h.correction||1.0;
+}
+function recordCompletionHistory(type,wasOverdue){
+  if(!S.learningHistory)S.learningHistory={};
+  if(!S.learningHistory[type])S.learningHistory[type]={samples:0,correction:1.0};
+  var h=S.learningHistory[type];
+  var target=wasOverdue?Math.min(2.0,h.correction*1.15+0.05):Math.max(0.8,h.correction*0.95);
+  h.correction=Math.round(((h.correction*0.7)+(target*0.3))*100)/100;
+  h.samples++;
+}
+
+// おすすめ順生成：既存のpendingTasks（今日のタスク）を並べ替えるのみ。保存形式は変更しない。
+// ─── ADAPTIVE LEARNING ENGINE (vNext2) ────────────────────────────────────────
+// Flowly自身が学習傾向を内部で学習し、次回の「おすすめ順」提案の精度を静かに上げるためのエンジン。
+// 分析画面・グラフ・設定は一切追加しない。すべて内部計算にのみ使用する。
+// 新規保存プロパティ：learningAnalytics / adaptiveHistory / sessionHistory（既存データには影響しない）
+
+function _ensureAdaptiveDefaults(){
+  if(!S.learningAnalytics||typeof S.learningAnalytics!=='object'||Array.isArray(S.learningAnalytics))S.learningAnalytics={bySubject:{},byWeekday:{},compressed:{}};
+  if(!S.learningAnalytics.bySubject||typeof S.learningAnalytics.bySubject!=='object')S.learningAnalytics.bySubject={};
+  if(!S.learningAnalytics.byWeekday||typeof S.learningAnalytics.byWeekday!=='object')S.learningAnalytics.byWeekday={};
+  if(!S.learningAnalytics.compressed||typeof S.learningAnalytics.compressed!=='object')S.learningAnalytics.compressed={};
+  if(!Array.isArray(S.sessionHistory))S.sessionHistory=[];
+  if(!S.adaptiveHistory||typeof S.adaptiveHistory!=='object'||Array.isArray(S.adaptiveHistory))S.adaptiveHistory={recommendedCapacity:null,missStreak:0,hitStreak:0,lastCapacityUpdateDate:null,dailyCompletion:{}};
+  if(!S.adaptiveHistory.dailyCompletion||typeof S.adaptiveHistory.dailyCompletion!=='object')S.adaptiveHistory.dailyCompletion={};
+}
+
+// ① Learning Analytics：1件の完了を記録する（教科別実績・曜日別実績・負荷実績・完了までの日数・開始/終了時刻）
+// ユーザーには一切表示しない。新しい入力は増やさず、既存のtask情報と完了タイミングのみから推定する。
+function recordSession(t,opts){
+  _ensureAdaptiveDefaults();
+  opts=opts||{};
+  var type=opts.type||inferLearningType(t.title);
+  var nowTs=Date.now(),dateStr=today();
+  var wd=new Date(dateStr+'T00:00:00').getDay();
+  var plannedLoad=t.load||1;
+  var wasOverdue=!!opts.wasOverdue;
+  // 実績負荷は新規入力を増やさず、期限超過の有無から間接的に推定する（超過＝見積り不足の兆候）
+  var actualLoad=wasOverdue?Math.round(plannedLoad*1.3*10)/10:Math.round(plannedLoad*0.95*10)/10;
+  var createdAt=t.createdAt||nowTs;
+  var daysToComplete=Math.max(0,Math.round((nowTs-createdAt)/86400000));
+  S.sessionHistory.push({date:dateStr,weekday:wd,type:type,plannedLoad:plannedLoad,actualLoad:actualLoad,
+    wasOverdue:wasOverdue,daysToComplete:daysToComplete,startAt:createdAt,endAt:nowTs,taskId:t.id});
+  _compressSessionHistory();
+
+  var subj=S.learningAnalytics.bySubject[type]||{plannedTotal:0,actualTotal:0,completions:0,daysToCompleteTotal:0};
+  subj.plannedTotal+=plannedLoad;subj.actualTotal+=actualLoad;subj.completions++;subj.daysToCompleteTotal+=daysToComplete;
+  S.learningAnalytics.bySubject[type]=subj;
+
+  var wdStat=S.learningAnalytics.byWeekday[wd]||{completed:0,missed:0};
+  if(wasOverdue)wdStat.missed++;else wdStat.completed++;
+  S.learningAnalytics.byWeekday[wd]=wdStat;
+
+  var dc=S.adaptiveHistory.dailyCompletion;
+  dc[dateStr]=(dc[dateStr]||0)+plannedLoad;
+  _pruneDailyCompletion();
+}
+// 週次タスクのスキップも曜日別「未達」として記録する（③曜日補正の学習材料）
+function recordWeekdaySkip(wd){
+  _ensureAdaptiveDefaults();
+  var wdStat=S.learningAnalytics.byWeekday[wd]||{completed:0,missed:0};
+  wdStat.missed++;
+  S.learningAnalytics.byWeekday[wd]=wdStat;
+}
+// パフォーマンス対策：sessionHistoryは365日程度に制限し、古いものは月次集計へ圧縮してから間引く
+function _compressSessionHistory(){
+  var LIMIT=365;
+  if(S.sessionHistory.length<=LIMIT)return;
+  var old=S.sessionHistory.splice(0,S.sessionHistory.length-LIMIT);
+  old.forEach(function(s){
+    var ym=s.date.slice(0,7);
+    var c=S.learningAnalytics.compressed[ym]||{plannedTotal:0,actualTotal:0,completions:0};
+    c.plannedTotal+=s.plannedLoad;c.actualTotal+=s.actualLoad;c.completions++;
+    S.learningAnalytics.compressed[ym]=c;
+  });
+}
+function _pruneDailyCompletion(){
+  var dc=S.adaptiveHistory.dailyCompletion,keys=Object.keys(dc).sort(),LIMIT=60;
+  while(keys.length>LIMIT){delete dc[keys.shift()];}
+}
+
+// ⑥ Confidence Score：サンプル数から0〜1の内部信頼度を返す。表示はしないが各種補正の重み付けに使う。
+function getConfidenceScore(type){
+  _ensureAdaptiveDefaults();
+  var subj=S.learningAnalytics.bySubject[type];
+  var samples=subj?subj.completions:0;
+  return Math.max(0,Math.min(1,samples/10));
+}
+
+// ② 教科補正：教科ごとの予定負荷/実績負荷の比率から補正係数を得る（例：予定3・実績4.2→補正1.4）。
+// サンプルが少ないうちはConfidence Scoreで1.0側へ減衰させ、過剰反応を防ぐ。
+function getSubjectCorrection(type){
+  _ensureAdaptiveDefaults();
+  var subj=S.learningAnalytics.bySubject[type];
+  if(!subj||subj.completions<2||subj.plannedTotal<=0)return 1.0;
+  var raw=subj.actualTotal/subj.plannedTotal;
+  var confidence=getConfidenceScore(type);
+  return 1+(raw-1)*confidence;
+}
+
+// ③ 曜日補正：曜日ごとの達成率を学習し、達成率が低い曜日は内部負荷を軽減する（0.7〜1.0）。表示はしない。
+function getWeekdayAdjustment(wd){
+  _ensureAdaptiveDefaults();
+  var s=S.learningAnalytics.byWeekday[wd];
+  if(!s||(s.completed+s.missed)<3)return 1.0;
+  var rate=s.completed/(s.completed+s.missed);
+  if(rate>=0.85)return 1.0;
+  return Math.max(0.7,0.7+rate*0.3);
+}
+
+// ④ キャパシティ補正：ユーザー設定のキャパシティ自体は変更せず、内部推奨キャパシティのみを保持・調整する。
+// 実績平均より5〜10%高めを目安にしつつ、未達が続く場合のみ緩やかに引き下げる。
+function getRecommendedCapacity(baseCapacity){
+  _ensureAdaptiveDefaults();
+  var ah=S.adaptiveHistory;
+  if(ah.recommendedCapacity==null)ah.recommendedCapacity=Math.round(baseCapacity*1.075*10)/10;
+  return ah.recommendedCapacity;
+}
+// 日付が変わったタイミングで1日1回だけ呼び出し、前日の実績を見て推奨キャパシティを更新する
+function updateRecommendedCapacityForNewDay(baseCapacity){
+  _ensureAdaptiveDefaults();
+  var ah=S.adaptiveHistory,td=today();
+  if(ah.lastCapacityUpdateDate===td)return;
+  var yest=dateAddDays(td,-1),yestLoad=ah.dailyCompletion[yest]||0;
+  var target=getRecommendedCapacity(baseCapacity);
+  if(yestLoad>0){
+    if(yestLoad>=target*0.9){ah.hitStreak++;ah.missStreak=0;}
+    else{ah.missStreak++;ah.hitStreak=0;}
+  }
+  if(ah.missStreak>=3){ah.recommendedCapacity=Math.max(baseCapacity,Math.round(target*0.95*10)/10);ah.missStreak=0;}
+  else if(ah.hitStreak>=5){var capMax=Math.round(baseCapacity*1.10*10)/10;ah.recommendedCapacity=Math.min(capMax,Math.round(target*1.02*10)/10);ah.hitStreak=0;}
+  ah.lastCapacityUpdateDate=td;
+}
+
+// ⑤ 達成率予測：曜日傾向と負荷/推奨キャパシティ比から今日の達成率を内部推定する。アルゴリズム内部でのみ使用し、表示はしない。
+function predictTodayAchievementRate(pendingLoad,baseCapacity){
+  _ensureAdaptiveDefaults();
+  var wd=new Date(today()+'T00:00:00').getDay();
+  var s=S.learningAnalytics.byWeekday[wd];
+  var base=(s&&(s.completed+s.missed)>=3)?s.completed/(s.completed+s.missed):0.8;
+  var cap=getRecommendedCapacity(baseCapacity);
+  var loadRatio=cap>0?Math.min(2,pendingLoad/cap):1;
+  var adj=loadRatio<=1?1:Math.max(0.4,1-(loadRatio-1)*0.5);
+  return Math.max(0.1,Math.min(1,base*adj));
+}
+
+function generateRecommendedOrder(pending){
+  if(!Array.isArray(pending)||pending.length===0)return[];
+  var td=today(),focus=getFocusCoefficient(),remaining=pending.slice(),order=[],lastType=null,streak=0;
+  var baseCapacity=getTodayCapacity(),recCapacity=getRecommendedCapacity(baseCapacity);
+  var totalPendingLoad=pending.reduce(function(s,t){return s+(t.load||0);},0);
+  var predictedRate=predictTodayAchievementRate(totalPendingLoad,baseCapacity);
+  var wd=new Date(td+'T00:00:00').getDay(),weekdayAdj=getWeekdayAdjustment(wd);
+  var runningLoad=0;
+  while(remaining.length>0){
+    var best=null,bestScore=-Infinity,bestInfo=null;
+    for(var i=0;i<remaining.length;i++){
+      var t=remaining[i];
+      var type=t.type==='weekly'?'PRACTICE':inferLearningType(t.title);
+      var dScore=_deadlineScoreOf(t,td);
+      if(predictedRate<0.6)dScore*=1.15; // 達成率予測が低い日は締切系をより前倒し
+      var sens=TYPE_FOCUS_SENSITIVITY[type]||0.4;
+      var focusBonus=focus.val*sens*20;
+      var isSameType=(type===lastType);
+      var fatiguePenalty=isSameType?(fatigueMultiplier(streak)-1)*15:0;
+      var switchPenalty=(!isSameType&&lastType)?switchCost(lastType,type)*5:0;
+      var correction=getHistoryCorrection(type);
+      var historyBonus=(correction-1)*20;
+      var subjectCorrection=getSubjectCorrection(type);
+      var subjectBonus=(subjectCorrection-1)*15;
+      var weekdayBonus=-(1-weekdayAdj)*(t.load||1)*5; // 達成率の低い曜日ほど重いタスクを僅かに後ろへ
+      var capacityScore=(runningLoad+(t.load||0)<=recCapacity)?3:-3;
+      var score=dScore+focusBonus+historyBonus+subjectBonus+weekdayBonus+capacityScore-fatiguePenalty-switchPenalty;
+      if(score>bestScore){bestScore=score;best=t;bestInfo={type:type,dScore:dScore,focusBonus:focusBonus,fatiguePenalty:fatiguePenalty,switchPenalty:switchPenalty,historyBonus:historyBonus,subjectBonus:subjectBonus,subjectCorrection:subjectCorrection,weekdayBonus:weekdayBonus,isSameType:isSameType};}
+    }
+    var reason=_buildReason(best,bestInfo,focus,lastType);
+    order.push({task:best,type:bestInfo.type,reason:reason});
+    remaining=remaining.filter(function(x){return x.id!==best.id;});
+    runningLoad+=best.load||0;
+    if(bestInfo.isSameType)streak++;else streak=0;
+    lastType=bestInfo.type;
+  }
+  return order;
+}
+function _buildReason(t,info,focus,prevType){
+  var parts=[];
+  if(t._src==='overdue'||t._src==='today_dl')parts.push('締切が近い');
+  else if(t._src==='urgent')parts.push('明日が締切');
+  if(info.subjectBonus>=8)parts.push('あなたはこの教科に時間がかかる傾向があるため先に配置');
+  if(info.focusBonus>=10)parts.push(focus.label+'は集中力が高い時間帯');
+  if(info.historyBonus>=6)parts.push('過去の実績から余裕を持って早めに配置');
+  if(prevType&&prevType!==info.type&&(prevType==='LOGIC'||prevType==='READING')&&info.type==='MEMORY')parts.push('論理思考の後は暗記系で負荷分散');
+  else if(info.isSameType&&info.fatiguePenalty>0)parts.push('連続を避けたいが優先度が高い');
+  else if(prevType&&prevType!==info.type)parts.push('タイプを変えて認知負荷を分散');
+  if(parts.length===0)parts.push('全体のバランスを考慮');
+  return parts.slice(0,2).join('・');
+}
+
+// ─── TODAY STATS ─────────────────────────────────────────────────────────────
+function getTodayStats(){
+  var td=today(),snap=_ensureSnapshot(td);
+  var cap=isHoliday(td)?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);
+  var total=0,done=0,pending=[];
+  snap.entries.forEach(function(e){var t=S.tasks.find(function(x){return x.id===e.id;});if(!t)return;var isDone=e.type==='weekly'?isWeeklyDoneOn(t,td):t.done;total+=e.load;if(isDone)done+=e.load;else pending.push(Object.assign({},t,{_src:e.src,_snapLoad:e.load}));});
+  var extra=0;
+  if(S.extraDoneToday&&S.extraDoneToday.date===td){S.extraDoneToday.taskIds.forEach(function(id){var inSnap=snap.entries.some(function(e){return e.id===id;});if(!inSnap){var t=S.tasks.find(function(x){return x.id===id;});if(t)extra+=(t.load||1);}});}
+  done+=extra;total+=extra;
+  return{capacity:cap,totalLoad:total,doneLoad:done,remainingCapacity:cap-done,pendingTasks:pending,capacityReached:done>=cap,allDone:pending.length===0&&total>0};
+}
+function resetTodayPlan(){S.todayPlan=null;saveState();}
+function removeFromSnapshot(id){
+  if(!S.todayPlan||!Array.isArray(S.todayPlan.entries))return;
+  S.todayPlan.entries=S.todayPlan.entries.filter(function(e){return e.id!==id;});
+  if(S.extraDoneToday&&Array.isArray(S.extraDoneToday.taskIds)){var t=S.tasks.find(function(x){return x.id===id;});if(t&&S.extraDoneToday.taskIds.includes(id)){S.extraDoneToday.taskIds=S.extraDoneToday.taskIds.filter(function(x){return x!==id;});S.extraDoneToday.load=Math.max(0,(S.extraDoneToday.load||0)-(t.load||1));}}
+  saveState();
+}
+
+// ─── SIMULATE ────────────────────────────────────────────────────────────────
+function simulateEarliestCompletion(){
+  var pend=S.tasks.filter(function(t){return t.type!=='weekly'&&!t.done;});
+  if(pend.length===0)return null;
+  var sorted=pend.slice().sort(function(a,b){if(a.deadline&&!b.deadline)return -1;if(!a.deadline&&b.deadline)return 1;if(a.deadline&&b.deadline){var dc=a.deadline.localeCompare(b.deadline);if(dc!==0)return dc;}return(b.load||1)-(a.load||1);});
+  var td=today(),simDate=td,rem=sorted.map(function(t){return{load:t.load||1};});
+  var maxDays=365,day=0;
+  while(rem.length>0&&day<maxDays){
+    var cap=isHoliday(simDate)?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);
+    if(simDate===td){var el=(S.extraDoneToday&&S.extraDoneToday.date===td)?(S.extraDoneToday.load||0):0;var sdl=0;if(S.todayPlan&&S.todayPlan.date===td){S.todayPlan.entries.forEach(function(e){var t=S.tasks.find(function(x){return x.id===e.id;});if(!t)return;var isDone=e.type==='weekly'?isWeeklyDoneOn(t,td):t.done;if(isDone)sdl+=e.load;});}cap=Math.max(0,cap-el-sdl);}
+    var du=0,hu=0,asgn=new Array(rem.length).fill(false),ch=true;
+    while(ch){ch=false;for(var i=0;i<rem.length;i++){if(asgn[i])continue;var l=rem[i].load;if(du+l>cap)continue;if(l>=4&&hu>=1)continue;asgn[i]=true;du+=l;if(l>=4)hu++;ch=true;break;}}
+    var nr=[];for(var j=0;j<rem.length;j++){if(!asgn[j])nr.push(rem[j]);}rem=nr;
+    if(rem.length===0)break;
+    simDate=dateAddDays(simDate,1);day++;
+  }
+  return simDate;
+}
+
+// ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
+function exportData(){var b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Flowly_save_data.json';a.click();showToast('エクスポート完了');}
+function importData(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var p=JSON.parse(e.target.result);if(typeof p!=='object'||Array.isArray(p)){showToast('エラー：データ形式が不正です');return;}if(!Array.isArray(p.tasks))p.tasks=[];p.tasks=p.tasks.map(function(t){return Object.assign({},t,{title:sanitize(t.title||'')});});S=Object.assign({},S,p);if(S.settings&&S.settings.bg)applyBackground(S.settings.bg,S.settings.bgOpacity);saveState();showToast('インポート完了');navigateTo('home');}catch(e){showToast('エラー：ファイルが無効です');}};r.readAsText(f);}
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+var _toastTimer;
+function showToast(msg){var el=document.getElementById('toast');clearTimeout(_toastTimer);el.textContent=msg;el.classList.add('show');_toastTimer=setTimeout(function(){el.classList.remove('show');},2600);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function loadBadge(v){var c=loadColor(parseFloat(v)||1),l=loadLabel(parseFloat(v)||1);return'<span class="badge" style="background:'+c+'18;color:'+c+';border-color:'+c+'30">'+l+'</span>';}
+function deadlineChip(dl){if(!dl)return'';var days=daysUntil(dl),cls='badge',lbl='';if(days<0){cls+=' badge-overdue';lbl=Math.abs(days)+'日超過';}else if(days===0){cls+=' badge-today-dl';lbl='今日まで';}else if(days<=3){cls+=' badge-urgent';lbl='あと'+days+'日';}else{lbl='あと'+days+'日';}return'<span class="'+cls+'">'+lbl+'</span>';}
+
+function applyBackground(url,opacity){
+  var el=document.getElementById('bg-image');
+  if(!el){
+    el=document.createElement('div');el.id='bg-image';
+    el.style.cssText='position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;pointer-events:none;';
+    var ov=document.createElement('div');ov.id='bg-overlay';ov.style.cssText='position:absolute;inset:0;';
+    el.appendChild(ov);
+    // bg-staticの直後に挿入（bg-staticより前はだめ）
+    var bgS=document.getElementById('bg-static');
+    bgS.parentNode.insertBefore(el,bgS.nextSibling);
+  }
+  if(url){var alpha=Math.round((opacity!==undefined?opacity:65)/100*255).toString(16).padStart(2,'0');el.style.backgroundImage="url('"+url+"')";el.style.display='block';document.getElementById('bg-overlay').style.background='#080d14'+alpha;document.body.classList.add('has-bg');}
+  else{el.style.display='none';document.body.classList.remove('has-bg');}
+}
+
+// ─── SIDEBAR TOGGLE (index.html方式) ─────────────────────────────────────────
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+var currentPage=null;
+function navigateTo(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});
+  document.getElementById('main-content').innerHTML=renderPage(page);
+  postRender(page);
+  closeSidebar();
+}
+function renderPage(page){switch(page){case'home':return renderHome();case'tasks':return renderTasksPage();case'settings':return renderSettings();default:return renderHome();}}
+function postRender(page){
+  if(page==='settings'){
+    var slW=document.getElementById('capacity-slider-weekday'),vlW=document.getElementById('capacity-value-weekday');
+    if(slW&&vlW){slW.value=S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY;vlW.textContent=slW.value;}
+    var slH=document.getElementById('capacity-slider-holiday'),vlH=document.getElementById('capacity-value-holiday');
+    if(slH&&vlH){slH.value=S.settings.capacityHoliday||6;vlH.textContent=slH.value;}
+    var op=document.getElementById('opacity-slider'),ov=document.getElementById('opacity-value');
+    if(op&&ov){op.value=S.settings.bgOpacity!==undefined?S.settings.bgOpacity:65;ov.textContent=op.value+'%';}
+  }
+}
+function doRecompute(){rebalanceWithKeep();navigateTo('home');showToast('再計算しました');}
+
+// ─── HOME ────────────────────────────────────────────────────────────────────
+function renderHome(){
+  var td=today(),d=new Date(td+'T00:00:00'),dow=d.getDay();
+  var dateLabel=(d.getMonth()+1)+'月'+d.getDate()+'日（'+CFG.WEEKDAY_NAMES[dow]+'）';
+  var hol=isHoliday(td),stats=getTodayStats();
+  var cap=stats.capacity,done=stats.doneLoad,rem=stats.remainingCapacity;
+  var pending=stats.pendingTasks,capReached=stats.capacityReached,allDone=stats.allDone;
+  // Ring
+  var pct=cap>0?Math.min(100,Math.round(done/cap*100)):0;
+  var circ=2*Math.PI*42;
+  var offset=circ-(pct/100)*circ;
+  var rc=capReached?'#76c0ea':rem<=2?'#ffb347':'#76c0ea';
+  var ring='<div class="flow-ring-wrap">'+
+    '<div class="flow-ring-svg"><svg width="110" height="110" viewBox="0 0 110 110">'+
+      '<circle class="flow-ring-track" cx="55" cy="55" r="42"/>'+
+      '<circle class="flow-ring-fill" cx="55" cy="55" r="42" stroke="'+rc+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" style="filter:drop-shadow(0 0 6px '+rc+'88)"/>'+
+    '</svg>'+
+    '<div class="flow-ring-center"><div class="flow-ring-pct">'+pct+'%</div><div class="flow-ring-sub">達成率</div></div></div>'+
+    '<div class="flow-ring-stats">'+
+      '<div><div class="flow-stat-val" style="color:'+rc+'">'+done.toFixed(done%1===0?0:1)+'</div><div class="flow-stat-label">完了負荷</div></div>'+
+      '<div><div class="flow-stat-val">'+cap+'</div><div class="flow-stat-label">今日のキャパ</div></div>'+
+    '</div></div>';
+  // Tasks — おすすめ順（学習タイプ・集中力・疲労・履歴補正）を今日のタスク表示に統合する
+  var urgPend=pending.filter(function(t){return t._src==='overdue'||t._src==='today_dl'||t._src==='urgent';});
+  var taskHtml='';
+  if(stats.totalLoad===0){taskHtml='<div class="empty-state"><div class="empty-icon">✨</div><div class="empty-title">タスクがありません</div><div class="empty-sub">サイドバーの「タスクを追加」で登録しよう</div></div>';}
+  else if(capReached&&urgPend.length===0){taskHtml='<div class="achievement-banner"><div style="font-size:28px">🎯</div><div><div class="achievement-text-main">今日の目標達成！</div><div class="achievement-text-sub">お疲れ様でした</div></div></div>';}
+  else if(capReached&&urgPend.length>0){taskHtml='<div class="achievement-banner" style="margin-bottom:12px"><div style="font-size:28px">🎯</div><div><div class="achievement-text-main">目標達成！</div><div class="achievement-text-sub">下記の期限タスクが残っています</div></div></div>'+renderOrderedTaskList(urgPend,td);}
+  else if(allDone){taskHtml='<div class="achievement-banner" style="background:rgba(118,192,234,0.07);border-color:rgba(118,192,234,0.18)"><div style="font-size:28px">✅</div><div><div class="achievement-text-main">全タスク完了！</div><div class="achievement-text-sub">キャパにまだ余裕があります</div></div></div>';}
+  else{taskHtml=renderOrderedTaskList(pending,td);}
+  // Controls
+  var hasOv=S.settings.todayOverride&&S.settings.todayOverride.date===td;
+  var tags='';
+  if(hol){var bl=(dow===0||dow===6)?'週末':'祝日';tags='<span class="day-pill holiday-tag">'+bl+(hasOv?'（手動）':'')+'</span>';}
+  else if(hasOv){tags='<span class="day-pill ok-tag">平日（手動）</span>';}
+  var ovBtn=hol?'<button class="day-pill" onclick="setTodayOverride(false)">→ 平日</button>':'<button class="day-pill" onclick="setTodayOverride(true)">→ 休日</button>';
+  var recBtn='<button class="recompute-btn" onclick="doRecompute()" title="再計算"><svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+  return '<div class="page-wrap">'+
+    '<div class="page-head"><div class="page-head-row"><div><div class="page-title-main">'+dateLabel+'</div><div class="day-controls">'+tags+ovBtn+'</div></div>'+recBtn+'</div></div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">今日のフロー</span></div>'+ring+'</div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">今日のタスク</span><span style="color:var(--text3);font-size:11px">おすすめ順</span></div><div id="today-task-list">'+taskHtml+'</div></div>'+
+  '</div>';
+}
+
+// 今日のタスクを「おすすめ順」で統合表示する。週次タスクは固定表示（既存挙動維持）、
+// 単発タスクは学習効率エンジンの並び替え結果に沿って表示し、番号と理由を添える。
+function renderOrderedTaskList(list,td){
+  var weekly=list.filter(function(t){return t.type==='weekly';});
+  var once=list.filter(function(t){return t.type!=='weekly';});
+  var rec=generateRecommendedOrder(once);
+  var html='';
+  html+=weekly.map(function(t){return renderTodayTask(t,td);}).join('');
+  html+=rec.map(function(o,idx){return renderTodayTask(o.task,td,idx+1,o.reason);}).join('');
+  return html;
+}
+
+function renderTodayTask(t,td,orderNum,reason){
+  var isW=t.type==='weekly',isDone=isW?isWeeklyDoneOn(t,td):t.done;
+  var sb='';
+  if(t._src==='today_dl')sb='<span class="badge badge-today-dl">本日期限</span>';
+  else if(t._src==='urgent')sb='<span class="badge badge-urgent">明日期限</span>';
+  else if(t._src==='weekly')sb='<span class="badge badge-weekly">週</span>';
+  var toggleFn=isW?'toggleWeeklyTodayDone(\''+t.id+'\')':'toggleOnceTodayDone(\''+t.id+'\')';
+  var dispLoad=t._snapLoad||t.load||1;
+  var chkIcon=isDone?'<svg viewBox="0 0 24 24" fill="none"><polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+  var chkCls='task-check'+(isDone?' checked':'')+(isW?' weekly-icon':'');
+  var clickAttr=' onclick="'+toggleFn+'"';
+  var skipBtn='';
+  if(isW){var sk=isWeeklySkippedOn(t,td);skipBtn=sk?'<button class="skip-btn undo" onclick="unskipWeeklyToday(\''+t.id+'\')">↩ スキップ取消</button>':'<button class="skip-btn" onclick="skipWeeklyToday(\''+t.id+'\')">スキップ</button>';}
+  var orderTag=orderNum?'<span style="color:var(--accent);font-weight:700;font-size:12px;margin-right:6px">'+orderNum+'</span>':'';
+  var reasonLine=(reason&&!isDone)?'<div class="t-meta" style="color:var(--text3);font-size:11px;margin-top:2px">理由：'+sanitize(reason)+'</div>':'';
+  return '<div class="today-task'+(isDone?' done':'')+'">'+
+    '<button class="'+chkCls+'"'+clickAttr+'>'+chkIcon+'</button>'+
+    '<div class="t-body"><div class="t-title">'+orderTag+sanitize(t.title)+'</div>'+
+    '<div class="t-meta">'+loadBadge(dispLoad)+sb+(t.deadline?deadlineChip(t.deadline):'')+'</div>'+
+    reasonLine+
+    (skipBtn?'<div>'+skipBtn+'</div>':'')+
+    '</div></div>';
+}
+function toggleOnceTodayDone(id){toggleOnceDone(id);navigateTo('home');}
+function toggleWeeklyTodayDone(id){var td=today(),t=S.tasks.find(function(x){return x.id===id;});if(!t)return;if(isWeeklyDoneOn(t,td))unmarkWeeklyDoneToday(id);else markWeeklyDoneToday(id);navigateTo('home');}
+
+// ─── TASKS PAGE ──────────────────────────────────────────────────────────────
+var _editingTaskId=null,_taskFilter='active',_deletingTaskId=null;
+
+function renderTasksPage(){
+  var allOnce=S.tasks.filter(function(t){return t.type!=='weekly';});
+  var active=allOnce.filter(function(t){return!t.done;}),done=allOnce.filter(function(t){return t.done;});
+  var weekly=S.tasks.filter(function(t){return t.type==='weekly';});
+  var aC=active.length>0?' <span class="tab-count">'+active.length+'</span>':'';
+  var wC=weekly.length>0?' <span class="tab-count">'+weekly.length+'</span>':'';
+  var tabs='<button class="sub-tab'+(_taskFilter==='active'?' active':'')+'" onclick="setTaskFilter(\'active\')">未完了'+aC+'</button>'+
+    '<button class="sub-tab'+(_taskFilter==='done'?' active':'')+'" onclick="setTaskFilter(\'done\')">完了済み</button>'+
+    '<button class="sub-tab'+(_taskFilter==='weekly'?' active':'')+'" onclick="setTaskFilter(\'weekly\')">週次'+wC+'</button>';
+  var listHtml='';
+  if(_taskFilter==='active'){
+    if(!active.length){listHtml='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">タスクがありません</div><div class="empty-sub">サイドバーの「タスクを追加」で登録</div></div>';}
+    else{var s=active.slice().sort(function(a,b){if(a.deadline&&!b.deadline)return -1;if(!a.deadline&&b.deadline)return 1;if(a.deadline&&b.deadline){var dc=a.deadline.localeCompare(b.deadline);if(dc!==0)return dc;}return(b.load||1)-(a.load||1);});listHtml=s.map(function(t){return renderTaskItem(t);}).join('');}
+  }else if(_taskFilter==='done'){
+    if(!done.length){listHtml='<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">完了済みタスクはありません</div></div>';}
+    else{var s2=done.slice().sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});listHtml=s2.map(function(t){return renderTaskItem(t);}).join('');}
+  }else{
+    if(!weekly.length){listHtml='<div class="empty-state"><div class="empty-icon">🔁</div><div class="empty-title">週次タスクがありません</div></div>';}
+    else{listHtml=weekly.map(function(t){return renderTaskItem(t);}).join('');}
+  }
+  var simHtml='';
+  if(active.length>0){var sd=simulateEarliestCompletion(),sc='sim-date',st='';if(!sd){st='なし';sc+=' none';}else if(sd===today()){st='今日';}else{var sdd=new Date(sd+'T00:00:00');st=(sdd.getMonth()+1)+'/'+ sdd.getDate()+'（'+CFG.WEEKDAY_NAMES[sdd.getDay()]+'）';}simHtml='<div class="sim-widget"><div class="sim-label">最速完了</div><div class="'+sc+'">'+st+'</div></div>';}
+  return '<div class="page-wrap">'+
+    '<div class="page-head"><div class="page-head-row"><div class="page-title-main">タスク</div>'+simHtml+'</div></div>'+
+    '<div class="sub-tabs">'+tabs+'</div>'+
+    '<div>'+listHtml+'</div>'+
+  '</div>';
+}
+
+function renderTaskItem(t){
+  var isW=t.type==='weekly',isDone=isW?false:t.done;
+  var wdStr='';
+  if(isW&&Array.isArray(t.weekDays)&&t.weekDays.length){wdStr=t.weekDays.slice().sort().map(function(d){return CFG.WEEKDAY_NAMES[d];}).join('・');}
+  var chk='';
+  if(!isW){var sv=isDone?'<svg viewBox="0 0 24 24" fill="none"><polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';chk='<button class="task-check'+(isDone?' checked':'')+'" onclick="toggleTaskDoneFromList(\''+t.id+'\')">'+sv+'</button>';}
+  else{chk='<button class="task-check weekly-icon" onclick="toggleWeeklyDoneFromList(\''+t.id+'\')" aria-label="今日の完了を切り替え"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20V12m0 0l-3 3m3-3l3 3M4 4h16v4H4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>';}
+  var tdTag=(isW&&isWeeklyDoneOn(t,today()))?'<span class="badge badge-weekly">済</span>':'';
+  return '<div class="task-item'+(isDone?' done':'')+'">'+chk+
+    '<div class="task-item-main"><div class="t-title">'+sanitize(t.title)+'</div>'+
+    '<div class="t-meta" style="margin-top:5px">'+loadBadge(t.load)+(t.deadline?deadlineChip(t.deadline):'')+
+    (t.unlockDate&&t.unlockDate>today()?'<span class="badge badge-unlock">解禁 '+t.unlockDate.replace(/^\d{4}-/,'').replace('-','/')+'</span>':'')+
+    (wdStr?'<span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text3);border-color:var(--border)">'+wdStr+'</span>':'')+tdTag+'</div>'+
+    '</div>'+
+    '<div class="task-item-actions">'+
+      '<button class="icon-btn" onclick="openEditTask(\''+t.id+'\')" aria-label="編集"><svg viewBox="0 0 24 24" fill="none"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>'+
+      '<button class="icon-btn danger" onclick="openDeleteConfirm(\''+t.id+'\')" aria-label="削除"><svg viewBox="0 0 24 24" fill="none"><polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>'+
+    '</div></div>';
+}
+
+function setTaskFilter(k){_taskFilter=k;navigateTo('tasks');}
+function toggleTaskDoneFromList(id){
+  var t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='once')return;
+  var inSnap=S.todayPlan&&S.todayPlan.date===today()&&Array.isArray(S.todayPlan.entries)&&S.todayPlan.entries.some(function(e){return e.id===id;});
+  if(!t.done){toggleOnceDone(id);if(!inSnap)markExtraDone(id);}else{if(!inSnap)unmarkExtraDone(id);toggleOnceDone(id);}
+  navigateTo('tasks');
+}
+function toggleWeeklyDoneFromList(id){var td=today(),t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='weekly')return;if(isWeeklyDoneOn(t,td))unmarkWeeklyDoneToday(id);else markWeeklyDoneToday(id);navigateTo('tasks');}
+
+// ─── TASK MODAL ──────────────────────────────────────────────────────────────
+function openAddTask(){_editingTaskId=null;resetTaskModal();document.getElementById('modal-task-title').textContent='タスクを追加';setTaskType('once');setTimeout(function(){updateLoadSlider(3);},0);openModal('modal-task');}
+function openEditTask(id){var t=S.tasks.find(function(x){return x.id===id;});if(!t)return;_editingTaskId=id;resetTaskModal();document.getElementById('modal-task-title').textContent='タスクを編集';document.getElementById('input-task-title').value=t.title||'';setTaskType(t.type||'once');if(t.type==='weekly'){var wd=t.weekDays||[];document.querySelectorAll('.wd-btn').forEach(function(b){b.classList.toggle('active',wd.includes(+b.dataset.dow));});}else{document.getElementById('input-task-deadline').value=t.deadline||'';document.getElementById('input-task-unlock').value=t.unlockDate||'';}setLoadSlider(t.load||3);openModal('modal-task');}
+function resetTaskModal(){document.getElementById('input-task-title').value='';document.getElementById('input-task-deadline').value='';document.getElementById('input-task-unlock').value='';setLoadSlider(3);document.querySelectorAll('.wd-btn').forEach(function(b){b.classList.remove('active');});}
+function setTaskType(type){var isW=type==='weekly';document.querySelectorAll('.type-btn').forEach(function(b){b.classList.toggle('active',b.dataset.type===type);});document.getElementById('deadline-row').style.display=isW?'none':'';document.getElementById('unlock-row').style.display=isW?'none':'';document.getElementById('weekdays-row').style.display=isW?'':'none';}
+function updateLoadSlider(val){var v=parseFloat(val),badge=document.getElementById('load-slider-badge'),hint=document.getElementById('load-slider-hint');if(!badge)return;var c=loadColor(v),l=loadLabel(v);badge.textContent=l;badge.style.background=c+'18';badge.style.color=c;badge.style.borderColor=c+'30';var hints={0.5:'〜15分',1:'〜30分',1.5:'〜45分',2:'〜1時間',2.5:'〜1.5時間',3:'〜2時間',3.5:'〜2.5時間',4:'〜3時間',4.5:'〜4時間',5:'4時間超'};if(hint)hint.textContent=hints[v]||'';}
+function getLoadValue(){var sl=document.getElementById('load-slider');return sl?parseFloat(sl.value):3;}
+function setLoadSlider(val){var sl=document.getElementById('load-slider');if(sl){sl.value=val;updateLoadSlider(val);}}
+function toggleWeekday(btn){btn.classList.toggle('active');}
+function getSelectedWeekdays(){return Array.from(document.querySelectorAll('.wd-btn.active')).map(function(b){return+b.dataset.dow;});}
+function saveTask(){
+  var title=document.getElementById('input-task-title').value.trim();
+  var deadline=document.getElementById('input-task-deadline').value;
+  var unlock=document.getElementById('input-task-unlock').value;
+  var load=getLoadValue();
+  var typeEl=document.querySelector('.type-btn.active');
+  var type=typeEl?typeEl.dataset.type:'once';
+  var weekDays=type==='weekly'?getSelectedWeekdays():[];
+  if(!title){showToast('タイトルを入力してください');document.getElementById('input-task-title').focus();return;}
+  if(type==='weekly'&&weekDays.length===0){showToast('繰り返す曜日を選択してください');var firstWeekday=document.querySelector('.wd-btn');if(firstWeekday)firstWeekday.focus();return;}
+  var normalizedTitle=normalizeText(title);
+  var duplicateTask=S.tasks.find(function(x){return x.id!==_editingTaskId&&normalizeText(x.title)===normalizedTitle;});
+  if(duplicateTask){showToast('同じタイトルのタスクがすでにあります');document.getElementById('input-task-title').focus();return;}
+  if(_editingTaskId){
+    var t=S.tasks.find(function(x){return x.id===_editingTaskId;});if(!t)return;
+    t.title=sanitize(title);t.load=load;t.type=type;
+    if(type==='weekly'){t.weekDays=weekDays;t.deadline=null;t.unlockDate=null;if(!Array.isArray(t.doneHistory))t.doneHistory=[];if(!Array.isArray(t.skipHistory))t.skipHistory=[];}
+    else{t.deadline=deadline||null;t.unlockDate=unlock||null;t.weekDays=[];}
+    resetTodayPlan();
+  }else{
+    var task={id:generateId(),title:sanitize(title),load:load,type:type,createdAt:Date.now()};
+    if(type==='weekly'){task.weekDays=weekDays;task.doneHistory=[];task.skipHistory=[];task.deadline=null;task.unlockDate=null;}
+    else{task.deadline=deadline||null;task.unlockDate=unlock||null;task.weekDays=[];task.done=false;task.doneDate=null;}
+    S.tasks.push(task);resetTodayPlan();
+  }
+  saveState();closeModal('modal-task');showToast(_editingTaskId?'更新しました':'タスクを追加しました');navigateTo('tasks');
+}
+
+// ─── DELETE / RESET ──────────────────────────────────────────────────────────
+function openDeleteConfirm(id){_deletingTaskId=id;openModal('modal-delete-confirm');}
+function executeDeleteTask(){closeModal('modal-delete-confirm');if(!_deletingTaskId)return;removeFromSnapshot(_deletingTaskId);S.tasks=S.tasks.filter(function(t){return t.id!==_deletingTaskId;});_deletingTaskId=null;saveState();showToast('削除しました');navigateTo('tasks');}
+function openResetConfirm(){openModal('modal-confirm');}
+function executeReset(){closeModal('modal-confirm');S=Object.assign({},STATE_DEFAULTS,{settings:Object.assign({},STATE_DEFAULTS.settings),learningHistory:{},tasks:[],learningAnalytics:{bySubject:{},byWeekday:{},compressed:{}},adaptiveHistory:{recommendedCapacity:null,missStreak:0,hitStreak:0,lastCapacityUpdateDate:null,dailyCompletion:{}},sessionHistory:[]});saveState();showToast('リセットしました');navigateTo('home');}
+
+// ─── SETTINGS PAGE ───────────────────────────────────────────────────────────
+function renderSettings(){
+  var capW=S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY,capH=S.settings.capacityHoliday||6;
+  var bgOp=S.settings.bgOpacity!==undefined?S.settings.bgOpacity:65,hasBg=!!S.settings.bg;
+  var oncePend=S.tasks.filter(function(t){return t.type!=='weekly'&&!t.done;}).length;
+  var wklyCnt=S.tasks.filter(function(t){return t.type==='weekly';}).length;
+  var overdue=S.tasks.filter(function(t){return t.type!=='weekly'&&!t.done&&t.deadline&&t.deadline<today();}).length;
+  var levels=[0.5,1,1.5,2,3,4,5],descs=['〜15分','〜30分','〜45分','〜1時間','〜2時間','〜3時間','4時間超'];
+  var guide='<div class="load-guide"><div class="load-guide-title">負荷値の目安</div>'+
+    levels.map(function(l,i){var c=loadColor(l);return'<div class="load-guide-row"><span class="badge" style="background:'+c+'18;color:'+c+';border-color:'+c+'30">'+loadLabel(l)+'</span><span class="load-guide-desc">'+descs[i]+(l>=4?' ⚠️ 1日1つまで':'')+'</span></div>';}).join('')+'</div>';
+  return'<div class="page-wrap">'+
+    '<div class="page-head"><div class="page-title-main">設定</div></div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">タスク概要</span></div>'+
+      '<div class="summary-grid">'+
+        '<div class="summary-cell"><span class="summary-num">'+oncePend+'</span><span class="summary-lbl">未完了</span></div>'+
+        '<div class="summary-cell"><span class="summary-num" style="'+(overdue>0?'color:var(--danger)':'')+'">' +overdue+'</span><span class="summary-lbl">期限超過</span></div>'+
+        '<div class="summary-cell"><span class="summary-num">'+wklyCnt+'</span><span class="summary-lbl">週次</span></div>'+
+      '</div></div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">キャパシティ</span></div>'+
+      '<div class="capacity-row"><label class="capacity-row-label">平日</label><div class="capacity-control"><input type="range" id="capacity-slider-weekday" min="1" max="30" step="1" value="'+capW+'" oninput="document.getElementById(\'capacity-value-weekday\').textContent=this.value"><span class="cap-num" id="capacity-value-weekday">'+capW+'</span></div></div>'+
+      '<div class="capacity-row"><label class="capacity-row-label">休日</label><div class="capacity-control"><input type="range" id="capacity-slider-holiday" min="0" max="30" step="1" value="'+capH+'" oninput="document.getElementById(\'capacity-value-holiday\').textContent=this.value"><span class="cap-num" id="capacity-value-holiday">'+capH+'</span></div></div>'+
+      '<button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveCapacity()">保存</button>'+
+      guide+'</div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">壁紙</span></div>'+
+      '<div class="bg-preview '+(hasBg?'':'empty')+'" '+(hasBg?'style="background-image:url(\''+S.settings.bg+'\')"':'')+'>'+(!hasBg?'壁紙なし':'')+'</div>'+
+      '<div class="bg-actions"><button class="btn btn-secondary" onclick="document.getElementById(\'bg-file-input\').click()">画像を選択</button>'+(hasBg?'<button class="btn btn-danger" onclick="removeBg()">削除</button>':'')+'</div>'+
+      '<input type="file" id="bg-file-input" accept="image/*" style="display:none" onchange="onBgFileChange(event)">'+
+      (hasBg?'<div style="margin-top:16px"><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px">オーバーレイ濃度</label><div class="capacity-control"><input type="range" id="opacity-slider" min="0" max="95" value="'+bgOp+'" oninput="document.getElementById(\'opacity-value\').textContent=this.value+\'%\';previewOpacity(this.value)"><span class="cap-num" id="opacity-value">'+bgOp+'%</span><button class="btn btn-primary btn-sm" onclick="saveBgOpacity()">保存</button></div></div>':'')+
+    '</div>'+
+    '<div class="card"><div class="card-header"><span class="card-title">データ管理</span></div>'+
+      '<div class="settings-actions">'+
+        '<button class="btn btn-secondary btn-full" onclick="exportData()">データをエクスポート</button>'+
+        '<button class="btn btn-secondary btn-full" onclick="document.getElementById(\'import-input\').click()">データをインポート</button>'+
+        '<input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">'+
+        '<button class="btn btn-danger btn-full" onclick="openResetConfirm()">すべてのデータをリセット</button>'+
+      '</div></div>'+
+    '<div class="version-info">Flowly v'+CFG.APP_VERSION+' — Altair データ互換</div>'+
+  '</div>';
+}
+
+function saveCapacity(){
+  var vw=parseInt(document.getElementById('capacity-slider-weekday').value,10);
+  var vh=parseInt(document.getElementById('capacity-slider-holiday').value,10);
+  if(vw>=1&&vw<=30)S.settings.capacityWeekday=vw;
+  if(vh>=0&&vh<=30)S.settings.capacityHoliday=vh;
+  saveState();rebalanceSnapshot();showToast('キャパシティを保存しました');navigateTo('settings');
+}
+function onBgFileChange(ev){var f=ev.target.files[0];if(!f)return;if(f.size>5*1024*1024){showToast('ファイルが大きすぎます（5MB以下）');return;}var r=new FileReader();r.onload=function(e){S.settings.bg=e.target.result;saveState();applyBackground(S.settings.bg,S.settings.bgOpacity);showToast('壁紙を設定しました');navigateTo('settings');};r.readAsDataURL(f);}
+function removeBg(){S.settings.bg='';saveState();applyBackground('',0);showToast('壁紙を削除しました');navigateTo('settings');}
+function previewOpacity(v){applyBackground(S.settings.bg,+v);}
+function saveBgOpacity(){var v=+document.getElementById('opacity-slider').value;S.settings.bgOpacity=v;saveState();applyBackground(S.settings.bg,v);showToast('濃度を保存しました');}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init(){
+  loadState();
+  if(S.settings.bg)applyBackground(S.settings.bg,S.settings.bgOpacity);
+  navigateTo('home');
+  document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeModal(o.id);});});
+  window.addEventListener('offline',function(){document.getElementById('offline-badge').style.display='block';});
+  window.addEventListener('online',function(){document.getElementById('offline-badge').style.display='none';});
+  if(!navigator.onLine)document.getElementById('offline-badge').style.display='block';
+}
+init();
+</script>
+</body>
+</html>
