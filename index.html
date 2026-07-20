@@ -580,7 +580,7 @@ button:active,[onclick]:active{transform:scale(0.96)}
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 var CFG = {
-  APP_NAME:'Flowly', APP_VERSION:'3.1',
+  APP_NAME:'Flowly', APP_VERSION:'3.2',
   STORAGE_KEY:'altair_data',
   LEGACY_KEYS:['altair_v2','altair_v1'],
   WEEKDAY_NAMES:['日','月','火','水','木','金','土'],
@@ -1366,8 +1366,8 @@ function renderSettings(){
         '<input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">'+
         '<button class="btn btn-danger btn-full" onclick="openResetConfirm()">すべてのデータをリセット</button>'+
       '</div></div>'+
-    '<div class="version-info">Flowly v'+CFG.APP_VERSION+' — Altair データ互換</div>'+
-    '<div class="version-info" style="margin-top:4px;opacity:0.75">2026/07/05 更新：操作の押し心地・タスク完了と画面遷移のアニメーションを追加、達成負荷が消えるバグを修正</div>'+
+    '<div class="version-info">Flowly v'+CFG.APP_VERSION+'</div>'+
+    '<div class="version-info" style="margin-top:4px;opacity:0.75">2026/07/20 タスク負荷のバグを修正</div>'+
   '</div>';
 }
 
