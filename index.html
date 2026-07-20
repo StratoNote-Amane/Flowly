@@ -240,7 +240,7 @@ body.has-bg .modal{background:rgba(8,14,24,0.97)}
 
 /* ── TODAY TASKS ─────────────────────────────────── */
 .today-task{display:flex;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);transition:opacity 0.2s,transform 0.2s ease-out}
-.today-task.task-exit{opacity:0;transform:translateX(16px)}
+.today-task.task-exit,.task-item.task-exit{opacity:0;transform:translateX(16px)}
 .today-task:last-child{border-bottom:none}
 .today-task.done{opacity:0.42}
 .today-task.done .t-title{text-decoration:line-through}
@@ -304,7 +304,7 @@ body.has-bg .modal{background:rgba(8,14,24,0.97)}
 .tab-count{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#080d14;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;margin-left:3px;vertical-align:middle}
 
 /* ── TASK LIST ITEM ──────────────────────────────── */
-.task-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:8px;transition:border-color 0.15s}
+.task-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:8px;transition:opacity 0.2s,transform 0.2s ease-out,border-color 0.15s}
 .task-item:hover{border-color:var(--border2)}
 .task-item.done{opacity:0.5}
 .task-item.done .t-title{text-decoration:line-through}
@@ -632,7 +632,7 @@ function localDateStr(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad
 function sanitize(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function dateAddDays(ds,n){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localDateStr(d);}
 function dayOfWeek(ds){return new Date(ds+'T00:00:00').getDay();}
-function daysUntil(ds){var n=new Date();n.setHours(0,0,0,0);var dl=new Date(ds+'T00:00:00');return Math.round((dl-n)/86400000);}
+function daysUntil(ds,baseDate){var n=baseDate?new Date(baseDate+'T00:00:00'):new Date();n.setHours(0,0,0,0);var dl=new Date(ds+'T00:00:00');return Math.round((dl-n)/86400000);}
 
 function isHoliday(ds){
   if(S.settings&&S.settings.todayOverride&&S.settings.todayOverride.date===ds)return S.settings.todayOverride.isHoliday;
@@ -740,6 +740,24 @@ function fatigueMultiplier(streak){var i=Math.min(streak,FATIGUE_STEPS.length-1)
 
 // 切替コスト：直前と学習タイプが変わる場合の小さな負荷（疲労回避との比較で相殺されうる）
 function switchCost(prevType,nextType){if(!prevType||prevType===nextType)return 0;return 0.6;}
+
+// 負荷帯の近さと学習タイプの連続を避けて、人にとって自然な組み方に寄せるための補助関数。
+function getLoadBand(load){var l=Number(load)||1;if(l>=4)return 3;if(l>=3)return 2;if(l>=2)return 1;return 0;}
+function getVarietyPenalty(task,order,type,lastType,streak){
+  if(!task||!order||!order.length)return 0;
+  var prevEntry=order[order.length-1];var prevTask=prevEntry&&prevEntry.task;if(!prevTask)return 0;
+  var load=Number(task.load)||1;var prevLoad=Number(prevTask.load)||1;
+  var band=getLoadBand(load),prevBand=getLoadBand(prevLoad);
+  var penalty=0;var sameType=type===lastType;
+  if(sameType)penalty+=18+(band>=2?10:0);
+  if(prevBand>=2&&band>=2)penalty+=12;
+  if(prevBand===3&&band===3)penalty+=20;
+  if(prevBand===2&&band===2)penalty+=10;
+  if(prevBand>=2&&band<2)penalty-=6;
+  if(prevBand<2&&band>=2)penalty-=4;
+  if(streak>=2&&sameType)penalty+=12;
+  return penalty;
+}
 
 function _deadlineScoreOf(t,td){
   if(t._src==='overdue')return 100;
@@ -973,7 +991,8 @@ function generateRecommendedOrder(pending){
       var subjectBonus=(subjectCorrection-1)*15;
       var weekdayBonus=-(1-weekdayAdj)*(t.load||1)*5; // 達成率の低い曜日ほど重いタスクを僅かに後ろへ
       var capacityScore=(runningLoad+(t.load||0)<=recCapacity)?3:-3;
-      var score=dScore+focusBonus+historyBonus+subjectBonus+weekdayBonus+capacityScore-fatiguePenalty-switchPenalty;
+      var varietyPenalty=getVarietyPenalty(t,order,type,lastType,streak);
+      var score=dScore+focusBonus+historyBonus+subjectBonus+weekdayBonus+capacityScore-fatiguePenalty-switchPenalty-varietyPenalty;
       if(score>bestScore){bestScore=score;best=t;bestInfo={type:type,dScore:dScore,focusBonus:focusBonus,fatiguePenalty:fatiguePenalty,switchPenalty:switchPenalty,historyBonus:historyBonus,subjectBonus:subjectBonus,subjectCorrection:subjectCorrection,weekdayBonus:weekdayBonus,isSameType:isSameType};}
     }
     var reason=ReasonBuilder.build(best,bestInfo,focus,lastType);
@@ -1007,21 +1026,34 @@ function removeFromSnapshot(id){
 
 // ─── SIMULATE ────────────────────────────────────────────────────────────────
 function simulateEarliestCompletion(){
-  var pend=S.tasks.filter(function(t){return t.type!=='weekly'&&!t.done;});
-  if(pend.length===0)return null;
-  var sorted=pend.slice().sort(function(a,b){if(a.deadline&&!b.deadline)return -1;if(!a.deadline&&b.deadline)return 1;if(a.deadline&&b.deadline){var dc=a.deadline.localeCompare(b.deadline);if(dc!==0)return dc;}return(b.load||1)-(a.load||1);});
-  var td=today(),simDate=td,rem=sorted.map(function(t){return{load:t.load||1};});
-  var maxDays=365,day=0;
-  while(rem.length>0&&day<maxDays){
+  var pending=S.tasks.filter(function(t){return t.type!=='weekly'&&!t.done;});
+  if(pending.length===0)return null;
+  var td=today(),simDate=td,remaining=pending.slice(),maxDays=365,day=0;
+  while(remaining.length>0&&day<maxDays){
     var cap=isHoliday(simDate)?(S.settings.capacityHoliday||6):(S.settings.capacityWeekday||CFG.DEFAULT_DAILY_CAPACITY);
     if(simDate===td){var el=(S.extraDoneToday&&S.extraDoneToday.date===td)?(S.extraDoneToday.load||0):0;var sdl=0;if(S.todayPlan&&S.todayPlan.date===td){S.todayPlan.entries.forEach(function(e){var t=S.tasks.find(function(x){return x.id===e.id;});if(!t)return;var isDone=e.type==='weekly'?isWeeklyDoneOn(t,td):t.done;if(isDone)sdl+=e.load;});}cap=Math.max(0,cap-el-sdl);}
-    var du=0,hu=0,asgn=new Array(rem.length).fill(false),ch=true;
-    while(ch){ch=false;for(var i=0;i<rem.length;i++){if(asgn[i])continue;var l=rem[i].load;if(du+l>cap)continue;if(l>=4&&hu>=1)continue;asgn[i]=true;du+=l;if(l>=4)hu++;ch=true;break;}}
-    var nr=[];for(var j=0;j<rem.length;j++){if(!asgn[j])nr.push(rem[j]);}rem=nr;
-    if(rem.length===0)break;
+    var selected=[],used=0,heavy=0;
+    var candidates=remaining.filter(function(t){if(t.unlockDate&&t.unlockDate>simDate)return false;return true;}).slice().sort(function(a,b){
+      var aDeadline=a.deadline||null,bDeadline=b.deadline||null;
+      var aUrg=aDeadline?daysUntil(aDeadline,simDate):Infinity;
+      var bUrg=bDeadline?daysUntil(bDeadline,simDate):Infinity;
+      if(aDeadline&&bDeadline){var dc=aDeadline.localeCompare(bDeadline);if(dc!==0)return dc;}
+      else if(aDeadline&&!bDeadline)return -1;
+      else if(!aDeadline&&bDeadline)return 1;
+      if(aUrg!==bUrg){return aUrg-bUrg;}
+      return (b.load||1)-(a.load||1);
+    });
+    for(var i=0;i<candidates.length;i++){
+      var t=candidates[i];
+      var l=t.load||1;
+      if(used+l>cap)continue;
+      if(l>=4&&heavy>=1)continue;
+      selected.push(t);used+=l;if(l>=4)heavy++;}
+    remaining=remaining.filter(function(t){return !selected.some(function(s){return s.id===t.id;});});
+    if(remaining.length===0)break;
     simDate=dateAddDays(simDate,1);day++;
   }
-  return simDate;
+  return remaining.length===0?simDate:null;
 }
 
 // ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
@@ -1230,7 +1262,7 @@ function renderTaskItem(t){
   if(!isW){var sv=isDone?'<svg viewBox="0 0 24 24" fill="none"><polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';chk='<button class="task-check'+(isDone?' checked':'')+'" onclick="toggleTaskDoneFromList(\''+t.id+'\')">'+sv+'</button>';}
   else{chk='<button class="task-check weekly-icon" onclick="toggleWeeklyDoneFromList(\''+t.id+'\')" aria-label="今日の完了を切り替え"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20V12m0 0l-3 3m3-3l3 3M4 4h16v4H4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>';}
   var tdTag=(isW&&isWeeklyDoneOn(t,today()))?'<span class="badge badge-weekly">済</span>':'';
-  return '<div class="task-item'+(isDone?' done':'')+'">'+chk+
+  return '<div class="task-item'+(isDone?' done':'')+'" data-task-row="'+t.id+'">'+chk+
     '<div class="task-item-main"><div class="t-title">'+sanitize(t.title)+'</div>'+
     '<div class="t-meta" style="margin-top:5px">'+loadBadge(t.load)+(t.deadline?deadlineChip(t.deadline):'')+
     (t.unlockDate&&t.unlockDate>today()?'<span class="badge badge-unlock">解禁 '+t.unlockDate.replace(/^\d{4}-/,'').replace('-','/')+'</span>':'')+
@@ -1246,10 +1278,13 @@ function setTaskFilter(k){_taskFilter=k;navigateTo('tasks');}
 function toggleTaskDoneFromList(id){
   var t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='once')return;
   var inSnap=S.todayPlan&&S.todayPlan.date===today()&&Array.isArray(S.todayPlan.entries)&&S.todayPlan.entries.some(function(e){return e.id===id;});
-  if(!t.done){toggleOnceDone(id);if(!inSnap)markExtraDone(id);}else{if(!inSnap)unmarkExtraDone(id);toggleOnceDone(id);}
-  navigateTo('tasks');
+  var finish=function(){
+    if(!t.done){toggleOnceDone(id);if(!inSnap)markExtraDone(id);}else{if(!inSnap)unmarkExtraDone(id);toggleOnceDone(id);}
+    navigateTo('tasks');
+  };
+  Animation.taskExit(id,finish);
 }
-function toggleWeeklyDoneFromList(id){var td=today(),t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='weekly')return;if(isWeeklyDoneOn(t,td))unmarkWeeklyDoneToday(id);else markWeeklyDoneToday(id);navigateTo('tasks');}
+function toggleWeeklyDoneFromList(id){var td=today(),t=S.tasks.find(function(x){return x.id===id;});if(!t||t.type!=='weekly')return;var finish=function(){if(isWeeklyDoneOn(t,td))unmarkWeeklyDoneToday(id);else markWeeklyDoneToday(id);navigateTo('tasks');};Animation.taskExit(id,finish);}
 
 // ─── TASK MODAL ──────────────────────────────────────────────────────────────
 function openAddTask(){_editingTaskId=null;resetTaskModal();document.getElementById('modal-task-title').textContent='タスクを追加';setTaskType('once');setTimeout(function(){updateLoadSlider(3);},0);openModal('modal-task');}
