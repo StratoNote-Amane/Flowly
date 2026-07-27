@@ -580,7 +580,7 @@ button:active,[onclick]:active{transform:scale(0.96)}
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 var CFG = {
-  APP_NAME:'Flowly', APP_VERSION:'3.2',
+  APP_NAME:'Flowly', APP_VERSION:'3.3',
   STORAGE_KEY:'altair_data',
   LEGACY_KEYS:['altair_v2','altair_v1'],
   WEEKDAY_NAMES:['日','月','火','水','木','金','土'],
@@ -744,19 +744,45 @@ function switchCost(prevType,nextType){if(!prevType||prevType===nextType)return 
 // 負荷帯の近さと学習タイプの連続を避けて、人にとって自然な組み方に寄せるための補助関数。
 function getLoadBand(load){var l=Number(load)||1;if(l>=4)return 3;if(l>=3)return 2;if(l>=2)return 1;return 0;}
 function normalizeTitleText(title){var s=String(title||'').toLowerCase().replace(/[^a-z0-9ぁ-んァ-ン一-龯]+/g,' ').trim();return s;}
+function getTitleFamilyKey(title){
+  var s=normalizeTitleText(title);
+  if(!s)return'';
+  s=s.replace(/\b\d+\b/g,'');
+  s=s.replace(/\s+/g,' ').trim();
+  var tokens=s.split(/\s+/).filter(Boolean);
+  if(!tokens.length)return'';
+  var first=tokens[0];
+  if(first==='ワーク'||first==='work')return'ワーク';
+  if(first==='問題'||first==='課題'||first==='演習'||first==='練習'||first==='テスト')return first;
+  if(tokens.length>=2)return tokens.slice(0,2).join(' ');
+  return tokens[0];
+}
 function getTitleSimilarity(a,b){
   var ta=normalizeTitleText(a),tb=normalizeTitleText(b);
+  var fa=getTitleFamilyKey(a),fb=getTitleFamilyKey(b);
   if(!ta||!tb)return 0;
   if(ta===tb)return 1;
+  if(fa&&fb){
+    if(fa===fb)return 1;
+    if((fa==='ワーク'&&fb==='ワーク')||(fa==='ワーク'&&tb.indexOf('ワーク')!==-1)||(fb==='ワーク'&&ta.indexOf('ワーク')!==-1))return 0.95;
+    var aw=fa.split(/\s+/).filter(Boolean),bw=fb.split(/\s+/).filter(Boolean);
+    if(!aw.length||!bw.length)return 0;
+    var common=0;
+    var bwSet={};
+    bw.forEach(function(w){bwSet[w]=true;});
+    aw.forEach(function(w){if(bwSet[w])common++;});
+    var overlap=common/Math.max(1,Math.max(aw.length,bw.length));
+    if(aw[0]&&bw[0]&&aw[0]===bw[0])overlap=Math.max(overlap,0.7);
+    if(ta.indexOf(tb)!==-1||tb.indexOf(ta)!==-1)overlap=Math.max(overlap,0.8);
+    return overlap;
+  }
   var aw=ta.split(/\s+/).filter(Boolean),bw=tb.split(/\s+/).filter(Boolean);
   if(!aw.length||!bw.length)return 0;
   var bwSet={};
   bw.forEach(function(w){bwSet[w]=true;});
   var common=0;
   aw.forEach(function(w){if(bwSet[w])common++;});
-  var overlap=common/Math.max(1,Math.max(aw.length,bw.length));
-  if(ta.indexOf(tb)!==-1||tb.indexOf(ta)!==-1)overlap=Math.max(overlap,0.8);
-  return overlap;
+  return common/Math.max(1,Math.max(aw.length,bw.length));
 }
 function getVarietyPenalty(task,order,type,lastType,streak){
   if(!task||!order||!order.length)return 0;
@@ -765,28 +791,43 @@ function getVarietyPenalty(task,order,type,lastType,streak){
   var band=getLoadBand(load),prevBand=getLoadBand(prevLoad);
   var penalty=0;var sameType=type===lastType;
   var recentTypes=[];
-  for(var i=Math.max(0,order.length-3);i<order.length;i++){
-    var recentEntry=order[i];
+  var recentWindow=order.slice(Math.max(0,order.length-4));
+  for(var i=0;i<recentWindow.length;i++){
+    var recentEntry=recentWindow[i];
     if(!recentEntry)continue;
     var recentType=recentEntry.type||inferLearningType(recentEntry.task&&recentEntry.task.title);
     recentTypes.push(recentType);
   }
   var recentTypeMatches=recentTypes.filter(function(rt){return rt===type;}).length;
   var recentHeavyCount=0;
-  for(var j=Math.max(0,order.length-3);j<order.length;j++){
-    var recentEntry2=order[j];
+  for(var j=0;j<recentWindow.length;j++){
+    var recentEntry2=recentWindow[j];
     if(!recentEntry2)continue;
     var recentBand=getLoadBand(Number(recentEntry2.task&&recentEntry2.task.load)||1);
     if(recentBand>=2)recentHeavyCount++;
   }
+  var isHeavyBand=band>=2;
+  var heavyStreakPenalty=0;
+  if(isHeavyBand&&recentHeavyCount>=1)heavyStreakPenalty+=28+(recentHeavyCount-1)*8;
+  if(!isHeavyBand&&recentHeavyCount>=1)heavyStreakPenalty-=6;
   var titlePenalty=0;
-  for(var k=Math.max(0,order.length-2);k<order.length;k++){
-    var recentTask=order[k]&&order[k].task;
+  var familyKey=getTitleFamilyKey(task.title);
+  for(var k=0;k<recentWindow.length;k++){
+    var recentTask=recentWindow[k]&&recentWindow[k].task;
     if(!recentTask)continue;
     var sim=getTitleSimilarity(task.title,recentTask.title);
-    if(sim>=0.75)titlePenalty+=40;
-    else if(sim>=0.5)titlePenalty+=22;
-    else if(sim>=0.3)titlePenalty+=10;
+    var recentFamilyKey=getTitleFamilyKey(recentTask.title);
+    if(familyKey&&recentFamilyKey&&familyKey===recentFamilyKey){
+      titlePenalty+=95;
+    }else if(sim>=0.95){
+      titlePenalty+=80;
+    }else if(sim>=0.85){
+      titlePenalty+=55;
+    }else if(sim>=0.6){
+      titlePenalty+=30;
+    }else if(sim>=0.35){
+      titlePenalty+=15;
+    }
   }
   penalty+=titlePenalty;
   if(sameType)penalty+=30+(band>=2?16:0)+(streak>=2?8:0);
@@ -794,6 +835,7 @@ function getVarietyPenalty(task,order,type,lastType,streak){
   if(prevBand>=2&&band>=2)penalty+=20;
   else if(prevBand<2&&band>=2)penalty+=10;
   else if(prevBand>=2&&band<2)penalty-=10;
+  penalty+=heavyStreakPenalty;
   if(recentHeavyCount>=2&&band>=2)penalty+=12;
   if(recentHeavyCount>=1&&prevBand>=2&&band>=2)penalty+=6;
   if(streak>=2&&sameType)penalty+=10;
